@@ -10,7 +10,6 @@ import { toast } from "sonner";
 interface QuizCardProps {
   question: Question;
   onAnswer: (answer: Answer) => void;
-  showExplanation?: boolean;
   userAnswer?: number;
   isBookmarked: boolean;
   onBookmarkChange?: (isBookmarked: boolean) => void;
@@ -19,7 +18,6 @@ interface QuizCardProps {
 const QuizCard = ({ 
   question, 
   onAnswer, 
-  showExplanation = false,
   userAnswer,
   isBookmarked,
   onBookmarkChange
@@ -120,12 +118,6 @@ const QuizCard = ({
         
         <div>{renderOptions()}</div>
         
-        {showExplanation && userAnswer !== undefined && (
-          <div className="mt-4 p-3 bg-secondary rounded-lg">
-            <h4 className="font-medium mb-1">Explanation</h4>
-            <p className="text-sm">{question.explanation}</p>
-          </div>
-        )}
       </CardContent>
       
       {userAnswer === undefined && (

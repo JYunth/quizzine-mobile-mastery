@@ -60,7 +60,6 @@ const QuizInProgress: React.FC<QuizInProgressProps> = ({
       <QuizCard 
         question={currentQuestion} 
         onAnswer={onAnswer}
-        showExplanation={reviewMode}
         userAnswer={userAnswer}
         isBookmarked={isBookmarked}
         onBookmarkChange={onBookmarkChange}
