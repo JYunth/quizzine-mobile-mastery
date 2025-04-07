@@ -116,7 +116,7 @@ const Dashboard = () => {
                       <div>
                         <h3 className="font-medium">{getQuizTitle(quiz)}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(quiz.timestamp).toLocaleDateString()} · {quiz.answers.length} questions
+                          {new Date(quiz.timestamp).toLocaleString()} · {quiz.totalQuestions} {quiz.totalQuestions === 1 ? 'question' : 'questions'}
                         </p>
                       </div>
                       <div className="text-right">
