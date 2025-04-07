@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import QuizCard from "@/components/QuizCard";
 import { Question, Answer } from "@/types";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react"; // Import X icon
 import { useNavigate } from "react-router-dom";
 
 interface QuizInProgressProps {
@@ -38,23 +38,33 @@ const QuizInProgress: React.FC<QuizInProgressProps> = ({
   
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Header Section */}
+      <div className="flex items-center justify-between mb-4">
+        {/* Left-aligned Icon Button */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={reviewMode ? onBackToResults : () => navigate('/')}
+          className="h-10 w-10" // Ensure consistent size
+        >
+          {reviewMode ? <ArrowLeft size={20} /> : <X size={20} />}
+          <span className="sr-only">{reviewMode ? 'Back to Results' : 'Exit Quiz'}</span> 
+        </Button>
+        
+        {/* Centered Title */}
+        <div className="font-medium text-center flex-grow">{title}</div>
+        
+        {/* Placeholder for right side to balance layout */}
+        <div className="w-10"></div> 
+      </div>
+
+      {/* Progress Bar */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={reviewMode ? onBackToResults : () => navigate('/')}
-            className="p-0 h-auto"
-          >
-            <ArrowLeft size={20} className="mr-1" />
-            {reviewMode ? 'Back to Results' : 'Exit Quiz'}
-          </Button>
-          <div className="font-medium">{title}</div>
-          <div className="text-sm">
-            {currentQuestionIndex + 1} / {totalQuestions}
-          </div>
-        </div>
         <Progress value={progress} className="h-1" />
+        {/* Optional: Display question count here if needed */}
+         <div className="text-sm text-center mt-2 text-muted-foreground">
+           {currentQuestionIndex + 1} / {totalQuestions}
+         </div>
       </div>
       
       <QuizCard 

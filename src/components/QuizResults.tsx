@@ -54,23 +54,29 @@ const QuizResults = ({ questions, answers, onRetryIncorrect, onReviewQuiz }: Qui
   
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
+      {/* New Header Section */}
+      <div className="flex items-center justify-between mb-4">
+        {/* Left-aligned Icon Button */}
         <Button 
           variant="ghost" 
-          size="sm" 
+          size="icon" 
           onClick={() => navigate('/')}
-          className="p-0 h-auto"
+          className="h-10 w-10" // Ensure consistent size
         >
-          <ArrowLeft size={20} className="mr-1" />
-          Back to Home
+          <ArrowLeft size={20} />
+          <span className="sr-only">Back to Home</span> 
         </Button>
+        
+        {/* Centered Title */}
+        <div className="font-medium text-center flex-grow">Quiz Results</div>
+        
+        {/* Placeholder for right side to balance layout */}
+        <div className="w-10"></div> 
       </div>
       
       <Card className="mb-6">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-center">Quiz Results</CardTitle>
-        </CardHeader>
-        <CardContent>
+        {/* Removed CardHeader, title is now above */}
+        <CardContent className="pt-6"> {/* Added padding-top to compensate for removed header */}
           <div className="text-center mb-4">
             <div className="text-4xl font-bold mb-1">{percentage}%</div>
             <div className="text-lg">{score} out of {questions.length} correct</div>
