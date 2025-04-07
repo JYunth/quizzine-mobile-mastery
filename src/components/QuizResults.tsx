@@ -99,7 +99,7 @@ const QuizResults = ({ questions, answers, onRetryIncorrect }: QuizResultsProps)
                   <div className={`w-3 h-3 rounded-full ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`} />
                   <h4 className="font-medium text-sm truncate flex-1">
                     {question.question.length > 60 
-                      ? question.question.substring(0, in 60) + '...' 
+                      ? question.question.substring(0, 60) + '...' 
                       : question.question}
                   </h4>
                 </div>
