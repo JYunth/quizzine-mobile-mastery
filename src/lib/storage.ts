@@ -1,5 +1,5 @@
-import { AppStorage, Question, QuizAttempt, CustomQuiz } from "@/types";
-import { safeFetch } from "@/lib/quizUtils";
+import { AppStorage, Question, QuizAttempt, CustomQuiz, Course } from "@/types";
+import { getQuestionData, getCachedCourses, getCachedAllQuestions } from "./questionStore"; // Import from the new store
 
 const STORAGE_KEY = 'quizzineApp';
 
@@ -155,48 +155,28 @@ export const setCurrentCourseId = (courseId: string): void => {
   saveStorage(storage);
 };
 
-// Get all courses
-export const getAllCourses = async (): Promise<any[]> => {
-  const data = await safeFetch('/questions.json', { courses: [] });
-  return data.courses || [];
+// Get all courses from cache
+export const getAllCourses = async (): Promise<Course[]> => {
+  return await getCachedCourses();
 };
 
-// Get questions for week in current course
+// Get questions for week in current course from cache
 export const getQuestionsForWeek = async (week: number): Promise<Question[]> => {
-  const data = await safeFetch('/questions.json', { courses: [] });
+  const { allQuestions } = await getQuestionData();
   const courseId = getCurrentCourseId();
-  
-  const course = data.courses?.find((c: any) => c.id === courseId);
-  if (!course) return [];
-  
-  return course.questions?.filter((q: Question) => q.week === week) || [];
+  return allQuestions.filter(q => q.courseId === courseId && q.week === week);
 };
 
-// Get all questions from current course
+// Get all questions from current course from cache
 export const getAllQuestions = async (): Promise<Question[]> => {
-  const data = await safeFetch('/questions.json', { courses: [] });
+  const { allQuestions } = await getQuestionData();
   const courseId = getCurrentCourseId();
-  
-  const course = data.courses?.find((c: any) => c.id === courseId);
-  if (!course) return [];
-  
-  return course.questions || [];
+  return allQuestions.filter(q => q.courseId === courseId);
 };
 
-// Get questions from all courses
+// Get questions from all courses from cache
 export const getAllQuestionsFromAllCourses = async (): Promise<Question[]> => {
-  const data = await safeFetch('/questions.json', { courses: [] });
-  
-  let allQuestions: Question[] = [];
-  if (data.courses) {
-    data.courses.forEach((course: any) => {
-      if (course.questions) {
-        allQuestions = [...allQuestions, ...course.questions];
-      }
-    });
-  }
-  
-  return allQuestions;
+  return await getCachedAllQuestions();
 };
 
 // Shuffle an array (Fisher-Yates algorithm)
@@ -209,20 +189,24 @@ export const shuffleArray = <T>(array: T[]): T[] => {
   return newArray;
 };
 
-// Get bookmarked questions
+// Get bookmarked questions from cache
 export const getBookmarkedQuestions = async (): Promise<Question[]> => {
   const storage = getStorage();
-  const allQuestions = await getAllQuestionsFromAllCourses();
+  const allQuestions = await getCachedAllQuestions(); // Use cached data
   return allQuestions.filter(q => storage.bookmarks.includes(q.id));
 };
 
-// Get "smart boost" questions (prioritizing low confidence questions)
+// Get "smart boost" questions (prioritizing low confidence questions) from cache
 export const getSmartBoostQuestions = async (count: number = 10): Promise<Question[]> => {
   const storage = getStorage();
-  const allQuestions = await getAllQuestions();
-  
+  const courseId = getCurrentCourseId();
+  const allQuestions = await getCachedAllQuestions(); // Use cached data
+
+  // Filter for current course first
+  const courseQuestions = allQuestions.filter(q => q.courseId === courseId);
+
   // Sort by confidence (undefined or low confidence first)
-  const sortedQuestions = [...allQuestions].sort((a, b) => {
+  const sortedQuestions = [...courseQuestions].sort((a, b) => {
     const confidenceA = storage.confidenceRatings[a.id] || 0;
     const confidenceB = storage.confidenceRatings[b.id] || 0;
     return confidenceA - confidenceB;
@@ -248,11 +232,12 @@ export const getCustomQuizById = (id: string): CustomQuiz | undefined => {
   return storage.customQuizzes.find(quiz => quiz.id === id);
 };
 
+// Get questions for custom quiz from cache
 export const getQuestionsForCustomQuiz = async (quizId: string): Promise<Question[]> => {
   const quiz = getCustomQuizById(quizId);
   if (!quiz) return [];
-  
-  const allQuestions = await getAllQuestionsFromAllCourses();
+
+  const allQuestions = await getCachedAllQuestions(); // Use cached data
   return allQuestions.filter(q => quiz.questionIds.includes(q.id));
 };
 

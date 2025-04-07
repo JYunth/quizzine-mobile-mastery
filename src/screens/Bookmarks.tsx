@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react"; // Added useMemo
 import PageLayout from "@/components/PageLayout";
 import { getBookmarkedQuestions, isBookmarked, toggleBookmark } from "@/lib/storage";
 import { Question } from "@/types";
@@ -33,27 +33,31 @@ const Bookmarks = () => {
     toast("Bookmark removed");
   };
   
-  // Get unique weeks for filter
-  const weeks = Array.from(new Set(bookmarks.map(b => b.week))).sort((a, b) => a - b);
-  
-  // Filter bookmarks
-  const filteredBookmarks = bookmarks.filter(bookmark => {
-    // Week filter
-    if (selectedWeek !== null && bookmark.week !== selectedWeek) {
-      return false;
-    }
-    
-    // Search filter
-    if (searchTerm) {
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      return (
-        bookmark.question.toLowerCase().includes(lowerSearchTerm) ||
-        bookmark.tags.some(tag => tag.toLowerCase().includes(lowerSearchTerm))
-      );
-    }
-    
-    return true;
-  });
+  // Memoize unique weeks for filter
+  const weeks = useMemo(() => {
+    return Array.from(new Set(bookmarks.map(b => b.week))).sort((a, b) => a - b);
+  }, [bookmarks]); // Recalculate only when bookmarks change
+
+  // Memoize filtered bookmarks
+  const filteredBookmarks = useMemo(() => {
+    return bookmarks.filter(bookmark => {
+      // Week filter
+      if (selectedWeek !== null && bookmark.week !== selectedWeek) {
+        return false;
+      }
+      
+      // Search filter
+      if (searchTerm) {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        return (
+          bookmark.question.toLowerCase().includes(lowerSearchTerm) ||
+          (bookmark.tags && bookmark.tags.some(tag => tag.toLowerCase().includes(lowerSearchTerm))) // Added check for tags existence
+        );
+      }
+      
+      return true;
+    });
+  }, [bookmarks, selectedWeek, searchTerm]); // Recalculate when dependencies change
   
   return (
     <PageLayout title="Bookmarks">
