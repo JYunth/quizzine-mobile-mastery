@@ -2,34 +2,23 @@
 import { useState, useEffect } from "react";
 import PageLayout from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { getCustomQuizzes, deleteCustomQuiz } from "@/lib/storage";
 import { CustomQuiz } from "@/types";
-import { Link } from "react-router-dom";
-import { Trash2, CalendarDays, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import CustomQuizSheet from "@/components/CustomQuizSheet";
-import { formatDistanceToNow } from "date-fns";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import CustomQuizItem from "@/components/CustomQuizItem";
 import { toast } from "sonner";
 
 const CustomQuizzes = () => {
   const [quizzes, setQuizzes] = useState<CustomQuiz[]>([]);
   const [createSheetOpen, setCreateSheetOpen] = useState(false);
-  const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const loadQuizzes = () => {
+    setLoading(true);
     const customQuizzes = getCustomQuizzes();
     setQuizzes(customQuizzes);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -40,7 +29,6 @@ const CustomQuizzes = () => {
     deleteCustomQuiz(id);
     setQuizzes(quizzes.filter(quiz => quiz.id !== id));
     toast("Custom quiz deleted");
-    setQuizToDelete(null);
   };
 
   return (
@@ -54,7 +42,12 @@ const CustomQuizzes = () => {
           </Button>
         </div>
 
-        {quizzes.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="mt-4">Loading custom quizzes...</p>
+          </div>
+        ) : quizzes.length === 0 ? (
           <div className="text-center py-12 border rounded-lg">
             <h3 className="font-medium mb-2">No custom quizzes yet</h3>
             <p className="text-muted-foreground mb-6">
@@ -68,54 +61,11 @@ const CustomQuizzes = () => {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {quizzes.map(quiz => (
-              <Card key={quiz.id} className="flex flex-col h-full">
-                <CardContent className="pt-6 flex-grow">
-                  <h3 className="font-medium text-lg mb-2">{quiz.name}</h3>
-                  <div className="flex items-center text-muted-foreground text-sm mb-3">
-                    <CalendarDays className="h-4 w-4 mr-1" />
-                    <span>
-                      Created {formatDistanceToNow(new Date(quiz.timestamp), { addSuffix: true })}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {quiz.questionIds.length} questions
-                  </p>
-                </CardContent>
-                <CardFooter className="flex justify-between pt-0">
-                  <AlertDialog open={quizToDelete === quiz.id} onOpenChange={(isOpen) => {
-                    if (!isOpen) setQuizToDelete(null);
-                  }}>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setQuizToDelete(quiz.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Custom Quiz</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this custom quiz? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteQuiz(quiz.id)}>
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  
-                  <Link to={`/quiz/custom/${quiz.id}`}>
-                    <Button>Start Quiz</Button>
-                  </Link>
-                </CardFooter>
-              </Card>
+              <CustomQuizItem 
+                key={quiz.id}
+                quiz={quiz}
+                onDelete={handleDeleteQuiz}
+              />
             ))}
           </div>
         )}

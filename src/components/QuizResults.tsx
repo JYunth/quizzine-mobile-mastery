@@ -1,146 +1,183 @@
 
-import { Answer, Question } from "@/types";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { saveConfidenceRating } from "@/lib/storage";
-import { Slider } from "@/components/ui/slider";
+import { Question, Answer } from "@/types";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Check, X, ArrowLeft, BarChart3 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface QuizResultsProps {
   questions: Question[];
   answers: Answer[];
-  onRetryIncorrect: () => void;
+  onRetryIncorrect?: () => void;
+  onReviewQuiz?: () => void;
 }
 
-const QuizResults = ({ questions, answers, onRetryIncorrect }: QuizResultsProps) => {
-  const [confidenceRatings, setConfidenceRatings] = useState<Record<string, number>>(
-    Object.fromEntries(questions.map(q => [q.id, 3]))
+const QuizResults = ({ questions, answers, onRetryIncorrect, onReviewQuiz }: QuizResultsProps) => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<string>("summary");
+  
+  const score = answers.filter(a => a.correct).length;
+  const percentage = Math.round((score / questions.length) * 100);
+  const incorrectCount = questions.length - score;
+  
+  // Average time in seconds
+  const averageTime = Math.round(
+    answers.reduce((sum, a) => sum + a.timeTaken, 0) / 
+    answers.length / 
+    1000
   );
   
-  // Calculate results
-  const totalQuestions = questions.length;
-  const correctAnswers = answers.filter(a => a.correct).length;
-  const score = Math.round((correctAnswers / totalQuestions) * 100);
-  
-  const handleConfidenceChange = (questionId: string, value: number[]) => {
-    const newRatings = {
-      ...confidenceRatings,
-      [questionId]: value[0]
-    };
-    setConfidenceRatings(newRatings);
-    saveConfidenceRating(questionId, value[0]);
+  const getGradeText = () => {
+    if (percentage >= 90) return "Excellent!";
+    if (percentage >= 80) return "Great job!";
+    if (percentage >= 70) return "Good work!";
+    if (percentage >= 60) return "Not bad!";
+    return "Keep practicing!";
   };
   
-  // Group questions by correctness
-  const incorrectQuestions = questions.filter(q => 
-    answers.find(a => a.questionId === q.id && !a.correct)
-  );
+  const getQuestionText = (questionId: string) => {
+    const question = questions.find(q => q.id === questionId);
+    return question ? question.question : "";
+  };
   
-  // Show retry button only if there are incorrect answers
-  const hasIncorrectAnswers = incorrectQuestions.length > 0;
+  const getCorrectAnswer = (questionId: string) => {
+    const question = questions.find(q => q.id === questionId);
+    return question ? question.options[question.correctIndex] : "";
+  };
+  
+  const getUserAnswer = (answer: Answer) => {
+    const question = questions.find(q => q.id === answer.questionId);
+    return question ? question.options[answer.selectedOptionIndex] : "";
+  };
   
   return (
-    <div className="w-full px-4 max-w-xl mx-auto">
+    <div className="max-w-2xl mx-auto">
+      <div className="mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate('/')}
+          className="p-0 h-auto"
+        >
+          <ArrowLeft size={20} className="mr-1" />
+          Back to Home
+        </Button>
+      </div>
+      
       <Card className="mb-6">
-        <CardContent className="p-6">
-          <h2 className="text-2xl font-bold text-center mb-4">Quiz Results</h2>
-          
-          <div className="text-center mb-6">
-            <div className="text-5xl font-bold mb-2">{score}%</div>
-            <p className="text-muted-foreground">
-              You got {correctAnswers} out of {totalQuestions} questions correct
-            </p>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-center">Quiz Results</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center mb-4">
+            <div className="text-4xl font-bold mb-1">{percentage}%</div>
+            <div className="text-lg">{score} out of {questions.length} correct</div>
+            <div className="text-muted-foreground mt-2">{getGradeText()}</div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="bg-muted rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold">{totalQuestions}</div>
-              <div className="text-sm text-muted-foreground">Total Questions</div>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-secondary rounded-md p-4 text-center">
+              <div className="text-xl font-medium">{averageTime}s</div>
+              <div className="text-sm text-muted-foreground">Avg. Time</div>
             </div>
-            <div className="bg-muted rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold">{Math.round(
-                answers.reduce((sum, a) => sum + a.timeTaken, 0) / 1000 / 60
-              )}m</div>
-              <div className="text-sm text-muted-foreground">Total Time</div>
+            <div className="bg-secondary rounded-md p-4 text-center">
+              <div className="text-xl font-medium">{incorrectCount}</div>
+              <div className="text-sm text-muted-foreground">Incorrect</div>
             </div>
+          </div>
+          
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-2">
+            <Button className="flex-1" onClick={() => navigate('/')}>
+              Finish
+            </Button>
+            {incorrectCount > 0 && onRetryIncorrect && (
+              <Button variant="outline" className="flex-1" onClick={onRetryIncorrect}>
+                Retry Incorrect
+              </Button>
+            )}
+            {onReviewQuiz && (
+              <Button variant="outline" className="flex-1" onClick={onReviewQuiz}>
+                Review Quiz
+              </Button>
+            )}
           </div>
         </CardContent>
-        <CardFooter className="p-4 flex flex-col gap-3">
-          {hasIncorrectAnswers && (
-            <Button 
-              onClick={onRetryIncorrect}
-              className="w-full"
-              variant="secondary"
-            >
-              Retry Incorrect Answers ({incorrectQuestions.length})
-            </Button>
-          )}
-          <Link to="/" className="w-full">
-            <Button className="w-full">Back to Home</Button>
-          </Link>
-        </CardFooter>
       </Card>
       
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">Rate Your Confidence</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          This helps the app create personalized quizzes for you
-        </p>
+      <Tabs 
+        defaultValue="summary" 
+        value={activeTab} 
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <TabsList className="grid grid-cols-2 mb-4">
+          <TabsTrigger value="summary">Summary</TabsTrigger>
+          <TabsTrigger value="details">Details</TabsTrigger>
+        </TabsList>
         
-        {questions.map(question => {
-          const answer = answers.find(a => a.questionId === question.id);
-          const isCorrect = answer?.correct || false;
-          const selectedOptionIndex = answer?.selectedOptionIndex || 0;
-          
-          return (
-            <Card key={question.id} className="mb-3">
+        <TabsContent value="summary" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Performance Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-green-500 rounded-full" 
+                    style={{ width: `${percentage}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="details" className="space-y-4">
+          {answers.map((answer, index) => (
+            <Card key={answer.questionId} className="overflow-hidden">
+              <div className={`h-1 ${answer.correct ? 'bg-green-500' : 'bg-red-500'}`}></div>
               <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-3 h-3 rounded-full ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <h4 className="font-medium text-sm truncate flex-1">
-                    {question.question.length > 60 
-                      ? question.question.substring(0, 60) + '...' 
-                      : question.question}
-                  </h4>
-                </div>
-                
-                <div className="mt-3 mb-3 space-y-2">
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-xs font-medium">Correct Option:</span>
-                    <div className="p-2 text-sm rounded bg-green-100 dark:bg-green-900">
-                      {question.options[question.correctIndex]}
-                    </div>
+                <div className="flex items-start gap-2">
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-full ${
+                    answer.correct 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-red-100 text-red-700'
+                  } flex-shrink-0 mt-0.5`}>
+                    {answer.correct ? <Check size={14} /> : <X size={14} />}
                   </div>
-                  
-                  {!isCorrect && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-xs font-medium">Your Option:</span>
-                      <div className="p-2 text-sm rounded bg-red-100 dark:bg-red-900">
-                        {question.options[selectedOptionIndex]}
+                  <div>
+                    <div className="text-sm mb-1 font-medium">
+                      {index + 1}. {getQuestionText(answer.questionId)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Your answer: {getUserAnswer(answer)}
+                    </div>
+                    {!answer.correct && (
+                      <div className="text-xs text-green-600 mt-1">
+                        Correct answer: {getCorrectAnswer(answer.questionId)}
                       </div>
+                    )}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Time taken: {Math.round(answer.timeTaken / 1000)}s
                     </div>
-                  )}
-                </div>
-                
-                <div className="mt-3">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Low confidence</span>
-                    <span>High confidence</span>
                   </div>
-                  <Slider 
-                    value={[confidenceRatings[question.id]]} 
-                    min={1} 
-                    max={5} 
-                    step={1}
-                    onValueChange={(value) => handleConfidenceChange(question.id, value)}
-                  />
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -1,174 +1,37 @@
 
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import QuizCard from "@/components/QuizCard";
 import QuizResults from "@/components/QuizResults";
-import { 
-  getAllQuestions,
-  getBookmarkedQuestions,
-  getQuestionsForWeek,
-  getSmartBoostQuestions,
-  saveQuizAttempt,
-  shuffleArray,
-  isBookmarked,
-  getCurrentCourseId,
-  getQuestionsForCustomQuiz
-} from "@/lib/storage";
-import { Answer, Question, QuizAttempt, QuizMode } from "@/types";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { useQuizState } from "@/hooks/useQuizState";
+import { QuizMode } from "@/types";
+import QuizLoading from "@/components/QuizLoading";
+import QuizEmpty from "@/components/QuizEmpty";
+import QuizInProgress from "@/components/QuizInProgress";
+import { getQuizTitle } from "@/lib/quizUtils";
 
 const Quiz = () => {
   const { mode = 'weekly', week, id } = useParams<{ mode: QuizMode; week?: string; id?: string }>();
-  const navigate = useNavigate();
   
-  const [loading, setLoading] = useState(true);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answer[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [reviewMode, setReviewMode] = useState(false);
-  const [currentBookmarked, setCurrentBookmarked] = useState(false);
-  
-  useEffect(() => {
-    const loadQuestions = async () => {
-      setLoading(true);
-      
-      let loadedQuestions: Question[] = [];
-      
-      switch(mode) {
-        case 'weekly':
-          if (!week) {
-            navigate('/');
-            return;
-          }
-          loadedQuestions = await getQuestionsForWeek(parseInt(week));
-          break;
-        case 'full':
-          loadedQuestions = await getAllQuestions();
-          break;
-        case 'bookmark':
-          loadedQuestions = await getBookmarkedQuestions();
-          break;
-        case 'smart':
-          loadedQuestions = await getSmartBoostQuestions(10);
-          break;
-        case 'custom':
-          if (!id) {
-            navigate('/custom-quizzes');
-            return;
-          }
-          loadedQuestions = await getQuestionsForCustomQuiz(id);
-          break;
-      }
-      
-      const shuffled = shuffleArray(loadedQuestions);
-      setQuestions(shuffled);
-      
-      setLoading(false);
-    };
-    
-    loadQuestions();
-  }, [mode, week, id, navigate]);
-  
-  useEffect(() => {
-    if (questions.length > 0) {
-      const currentQuestion = questions[currentQuestionIndex];
-      setCurrentBookmarked(isBookmarked(currentQuestion.id));
-    }
-  }, [currentQuestionIndex, questions]);
-  
-  const handleAnswer = (answer: Answer) => {
-    setAnswers([...answers, answer]);
-    
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      finishQuiz();
-    }
-  };
-  
-  const finishQuiz = () => {
-    const attempt: QuizAttempt = {
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-      mode,
-      courseId: getCurrentCourseId(),
-      week: week ? parseInt(week) : undefined,
-      answers: [...answers],
-      score: answers.filter(a => a.correct).length,
-      totalQuestions: questions.length
-    };
-    
-    saveQuizAttempt(attempt);
-    
-    setShowResults(true);
-  };
-  
-  const handleRetryIncorrect = () => {
-    const incorrectIds = answers
-      .filter(a => !a.correct)
-      .map(a => a.questionId);
-    
-    const incorrectQuestions = questions.filter(q => incorrectIds.includes(q.id));
-    
-    setQuestions(incorrectQuestions);
-    setCurrentQuestionIndex(0);
-    setAnswers([]);
-    setShowResults(false);
-  };
-  
-  const handleReviewQuiz = () => {
-    setReviewMode(true);
-    setShowResults(false);
-    setCurrentQuestionIndex(0);
-  };
-  
-  const handleBackToResults = () => {
-    setReviewMode(false);
-    setShowResults(true);
-  };
-  
-  const navigateReview = (direction: 'next' | 'prev') => {
-    if (direction === 'next' && currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else if (direction === 'prev' && currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
-  };
-  
-  const getQuizTitle = () => {
-    switch(mode) {
-      case 'weekly':
-        if (!week) return 'Quiz';
-        const weekTitle = questions.length > 0 && questions[0].weekTitle 
-          ? `Week ${week} - ${questions[0].weekTitle}` 
-          : `Week ${week}`;
-        return weekTitle;
-      case 'full':
-        return 'Full Quiz';
-      case 'bookmark':
-        return 'Bookmarked Questions';
-      case 'smart':
-        return 'Smart Boost Quiz';
-      case 'custom':
-        return 'Custom Quiz';
-      default:
-        return 'Quiz';
-    }
-  };
+  const {
+    loading,
+    questions,
+    currentQuestionIndex,
+    answers,
+    showResults,
+    reviewMode,
+    currentBookmarked,
+    setCurrentBookmarked,
+    handleAnswer,
+    handleRetryIncorrect,
+    handleReviewQuiz,
+    handleBackToResults,
+    navigateReview
+  } = useQuizState({ mode, week, id });
   
   if (loading) {
     return (
       <PageLayout hideNav>
-        <div className="flex items-center justify-center h-[80vh]">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="mt-4">Loading questions...</p>
-          </div>
-        </div>
+        <QuizLoading />
       </PageLayout>
     );
   }
@@ -176,13 +39,7 @@ const Quiz = () => {
   if (questions.length === 0) {
     return (
       <PageLayout>
-        <div className="flex flex-col items-center justify-center h-[50vh]">
-          <h2 className="text-xl font-semibold mb-4">No questions found</h2>
-          <p className="text-muted-foreground mb-6">
-            There are no questions available for this selection.
-          </p>
-          <Button onClick={() => navigate('/')}>Back to Home</Button>
-        </div>
+        <QuizEmpty />
       </PageLayout>
     );
   }
@@ -194,67 +51,33 @@ const Quiz = () => {
           questions={questions} 
           answers={answers}
           onRetryIncorrect={handleRetryIncorrect}
+          onReviewQuiz={handleReviewQuiz}
         />
       </PageLayout>
     );
   }
   
   const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + (reviewMode ? 0 : 1)) / questions.length) * 100;
+  const quizTitle = getQuizTitle(mode, questions, week);
   const userAnswer = reviewMode 
     ? answers.find(a => a.questionId === currentQuestion.id)?.selectedOptionIndex 
     : undefined;
   
   return (
     <PageLayout hideNav>
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={reviewMode ? handleBackToResults : () => navigate('/')}
-              className="p-0 h-auto"
-            >
-              <ArrowLeft size={20} className="mr-1" />
-              {reviewMode ? 'Back to Results' : 'Exit Quiz'}
-            </Button>
-            <div className="font-medium">{getQuizTitle()}</div>
-            <div className="text-sm">
-              {currentQuestionIndex + 1} / {questions.length}
-            </div>
-          </div>
-          <Progress value={progress} className="h-1" />
-        </div>
-        
-        <QuizCard 
-          question={currentQuestion} 
-          onAnswer={handleAnswer}
-          showExplanation={reviewMode}
-          userAnswer={userAnswer}
-          isBookmarked={currentBookmarked}
-          onBookmarkChange={(isNowBookmarked) => setCurrentBookmarked(isNowBookmarked)}
-        />
-        
-        {reviewMode && (
-          <div className="flex justify-between mt-4">
-            <Button 
-              onClick={() => navigateReview('prev')} 
-              disabled={currentQuestionIndex === 0}
-              variant="outline"
-            >
-              Previous
-            </Button>
-            <Button 
-              onClick={() => navigateReview('next')} 
-              disabled={currentQuestionIndex === questions.length - 1}
-              variant="outline"
-            >
-              Next
-            </Button>
-          </div>
-        )}
-      </div>
+      <QuizInProgress
+        title={quizTitle}
+        currentQuestion={currentQuestion}
+        currentQuestionIndex={currentQuestionIndex}
+        totalQuestions={questions.length}
+        isBookmarked={currentBookmarked}
+        reviewMode={reviewMode}
+        userAnswer={userAnswer}
+        onBookmarkChange={setCurrentBookmarked}
+        onAnswer={handleAnswer}
+        onBackToResults={handleBackToResults}
+        onNavigateReview={navigateReview}
+      />
     </PageLayout>
   );
 };
