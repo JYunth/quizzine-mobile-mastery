@@ -5,20 +5,28 @@ import { Button } from "@/components/ui/button";
 import { getCustomQuizzes, deleteCustomQuiz } from "@/lib/storage";
 import { CustomQuiz } from "@/types";
 import { Plus } from "lucide-react";
-import CustomQuizSheet from "@/components/CustomQuizSheet";
+import CustomQuizDrawer from "@/components/CustomQuizDrawer";
 import CustomQuizItem from "@/components/CustomQuizItem";
 import { toast } from "sonner";
+import QuizEmpty from "@/components/QuizEmpty";
+import QuizLoading from "@/components/QuizLoading";
 
 const CustomQuizzes = () => {
   const [quizzes, setQuizzes] = useState<CustomQuiz[]>([]);
-  const [createSheetOpen, setCreateSheetOpen] = useState(false);
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadQuizzes = () => {
     setLoading(true);
-    const customQuizzes = getCustomQuizzes();
-    setQuizzes(customQuizzes);
-    setLoading(false);
+    try {
+      const customQuizzes = getCustomQuizzes();
+      setQuizzes(customQuizzes);
+    } catch (error) {
+      console.error("Failed to load custom quizzes:", error);
+      toast("Failed to load custom quizzes");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -31,33 +39,27 @@ const CustomQuizzes = () => {
     toast("Custom quiz deleted");
   };
 
+  if (loading) {
+    return (
+      <PageLayout title="Custom Quizzes">
+        <QuizLoading />
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout title="Custom Quizzes">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto pb-16">
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-xl font-semibold">Your Custom Quizzes</h2>
-          <Button onClick={() => setCreateSheetOpen(true)}>
+          <Button onClick={() => setCreateDrawerOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Create Quiz
           </Button>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="mt-4">Loading custom quizzes...</p>
-          </div>
-        ) : quizzes.length === 0 ? (
-          <div className="text-center py-12 border rounded-lg">
-            <h3 className="font-medium mb-2">No custom quizzes yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Create your first custom quiz by selecting questions from the quiz bank
-            </p>
-            <Button onClick={() => setCreateSheetOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Quiz
-            </Button>
-          </div>
+        {quizzes.length === 0 ? (
+          <QuizEmpty />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {quizzes.map(quiz => (
@@ -70,9 +72,9 @@ const CustomQuizzes = () => {
           </div>
         )}
 
-        <CustomQuizSheet 
-          open={createSheetOpen} 
-          onOpenChange={setCreateSheetOpen} 
+        <CustomQuizDrawer 
+          open={createDrawerOpen} 
+          onOpenChange={setCreateDrawerOpen} 
           onQuizCreated={loadQuizzes}
         />
       </div>

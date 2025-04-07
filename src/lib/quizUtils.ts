@@ -25,3 +25,27 @@ export const getQuizTitle = (
       return 'Quiz';
   }
 };
+
+// Helper for safely parsing JSON data
+export const safeJsonParse = <T>(jsonString: string, fallback: T): T => {
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch (error) {
+    console.error('Failed to parse JSON:', error);
+    return fallback;
+  }
+};
+
+// Helper for safely fetching data
+export const safeFetch = async <T>(url: string, fallback: T): Promise<T> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Network response was not ok: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch from ${url}:`, error);
+    return fallback;
+  }
+};

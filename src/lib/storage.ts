@@ -1,5 +1,5 @@
-
 import { AppStorage, Question, QuizAttempt, CustomQuiz } from "@/types";
+import { safeFetch } from "@/lib/quizUtils";
 
 const STORAGE_KEY = 'quizzineApp';
 
@@ -157,66 +157,46 @@ export const setCurrentCourseId = (courseId: string): void => {
 
 // Get all courses
 export const getAllCourses = async (): Promise<any[]> => {
-  try {
-    const response = await fetch('/questions.json');
-    const data = await response.json();
-    return data.courses;
-  } catch (error) {
-    console.error('Failed to fetch courses', error);
-    return [];
-  }
+  const data = await safeFetch('/questions.json', { courses: [] });
+  return data.courses || [];
 };
 
 // Get questions for week in current course
 export const getQuestionsForWeek = async (week: number): Promise<Question[]> => {
-  try {
-    const response = await fetch('/questions.json');
-    const data = await response.json();
-    const courseId = getCurrentCourseId();
-    
-    const course = data.courses.find((c: any) => c.id === courseId);
-    if (!course) return [];
-    
-    return course.questions.filter((q: Question) => q.week === week);
-  } catch (error) {
-    console.error('Failed to fetch questions', error);
-    return [];
-  }
+  const data = await safeFetch('/questions.json', { courses: [] });
+  const courseId = getCurrentCourseId();
+  
+  const course = data.courses?.find((c: any) => c.id === courseId);
+  if (!course) return [];
+  
+  return course.questions?.filter((q: Question) => q.week === week) || [];
 };
 
 // Get all questions from current course
 export const getAllQuestions = async (): Promise<Question[]> => {
-  try {
-    const response = await fetch('/questions.json');
-    const data = await response.json();
-    const courseId = getCurrentCourseId();
-    
-    const course = data.courses.find((c: any) => c.id === courseId);
-    if (!course) return [];
-    
-    return course.questions;
-  } catch (error) {
-    console.error('Failed to fetch questions', error);
-    return [];
-  }
+  const data = await safeFetch('/questions.json', { courses: [] });
+  const courseId = getCurrentCourseId();
+  
+  const course = data.courses?.find((c: any) => c.id === courseId);
+  if (!course) return [];
+  
+  return course.questions || [];
 };
 
 // Get questions from all courses
 export const getAllQuestionsFromAllCourses = async (): Promise<Question[]> => {
-  try {
-    const response = await fetch('/questions.json');
-    const data = await response.json();
-    
-    let allQuestions: Question[] = [];
+  const data = await safeFetch('/questions.json', { courses: [] });
+  
+  let allQuestions: Question[] = [];
+  if (data.courses) {
     data.courses.forEach((course: any) => {
-      allQuestions = [...allQuestions, ...course.questions];
+      if (course.questions) {
+        allQuestions = [...allQuestions, ...course.questions];
+      }
     });
-    
-    return allQuestions;
-  } catch (error) {
-    console.error('Failed to fetch questions', error);
-    return [];
   }
+  
+  return allQuestions;
 };
 
 // Shuffle an array (Fisher-Yates algorithm)
