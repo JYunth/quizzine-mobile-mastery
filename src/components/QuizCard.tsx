@@ -1,8 +1,7 @@
-
 import { toggleBookmark, isBookmarked } from "@/lib/storage";
 import { Question, Answer } from "@/types";
 import { useState } from "react";
-import { BookMark, Clock } from "lucide-react";
+import { Bookmark, Clock } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -100,7 +99,7 @@ const QuizCard = ({
             onClick={handleToggleBookmark}
             className={bookmarked ? "text-amber-500" : ""}
           >
-            <BookMark size={20} />
+            <Bookmark size={20} />
           </Button>
         </div>
         

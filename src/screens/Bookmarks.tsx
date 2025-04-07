@@ -1,10 +1,9 @@
-
 import { useEffect, useState } from "react";
 import PageLayout from "@/components/PageLayout";
 import { getBookmarkedQuestions, isBookmarked, toggleBookmark } from "@/lib/storage";
 import { Question } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookMark, Search } from "lucide-react";
+import { Bookmark, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +98,7 @@ const Bookmarks = () => {
           </div>
         ) : filteredBookmarks.length === 0 ? (
           <div className="text-center py-10">
-            <BookMark size={48} className="mx-auto mb-3 text-muted-foreground opacity-20" />
+            <Bookmark size={48} className="mx-auto mb-3 text-muted-foreground opacity-20" />
             <h2 className="text-xl font-semibold mb-2">No bookmarks found</h2>
             <p className="text-muted-foreground mb-6">
               {bookmarks.length === 0 
@@ -147,7 +146,7 @@ const Bookmarks = () => {
                       onClick={() => handleRemoveBookmark(bookmark.id)}
                       className="text-amber-500"
                     >
-                      <BookMark size={18} />
+                      <Bookmark size={18} />
                     </Button>
                   </div>
                   

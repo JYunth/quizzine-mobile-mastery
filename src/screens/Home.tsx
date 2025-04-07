@@ -5,7 +5,7 @@ import { getAllQuestions, getStorage, updateStreak } from "@/lib/storage";
 import { Question } from "@/types";
 import WeekCard from "@/components/WeekCard";
 import ActionCard from "@/components/ActionCard";
-import { Brain, Calendar, Lightning, Settings } from "lucide-react";
+import { Brain, Calendar, Zap, Settings } from "lucide-react";
 
 const Home = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -83,7 +83,7 @@ const Home = () => {
           <ActionCard 
             title="Quick Quiz" 
             description="Take a quiz with all questions"
-            icon={Lightning}
+            icon={Zap}
             to="/quiz/full"
             color="bg-amber-600"
           />
