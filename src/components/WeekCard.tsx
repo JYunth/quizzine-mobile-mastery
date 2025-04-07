@@ -1,6 +1,7 @@
 
 import { getStorage } from "@/lib/storage";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge"; // Import Badge
 import { Question } from "@/types";
 import { Link } from "react-router-dom";
 
@@ -24,16 +25,17 @@ const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps) => {
     ? Math.min(100, Math.round((completedCount / questionsCount) * 100))
     : 0;
   
-  // Determine status
+  // Determine status and badge variant
   let status = "Not started";
-  let statusColor = "bg-secondary";
-  
+  // Update type to include 'inProgress'
+  let badgeVariant: "notStarted" | "inProgress" | "success" = "notStarted"; 
+
   if (completionPercentage === 100) {
     status = "Completed";
-    statusColor = "bg-green-500";
+    badgeVariant = "success";
   } else if (completionPercentage > 0) {
     status = "In progress";
-    statusColor = "bg-amber-500";
+    badgeVariant = "inProgress"; // Use inProgress variant
   }
   
   return (
@@ -44,9 +46,10 @@ const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps) => {
             <h3 className="text-lg font-semibold mb-1">
               {weekTitle ? `Week ${week} - ${weekTitle}` : `Week ${week}`}
             </h3>
-            <span className={`text-xs px-2 py-1 rounded-full text-white ${statusColor} self-start mb-3`}>{status}</span>
+            {/* Replace span with Badge component */}
+            <Badge variant={badgeVariant} className="self-start mb-3">{status}</Badge>
           </div>
-          
+
           <div className="mt-1">
             <div className="w-full bg-secondary rounded-full h-2">
               <div 
