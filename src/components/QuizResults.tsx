@@ -41,7 +41,7 @@ const QuizResults = ({ questions, answers, onRetryIncorrect }: QuizResultsProps)
   const hasIncorrectAnswers = incorrectQuestions.length > 0;
   
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="w-full px-4 max-w-xl mx-auto">
       <Card className="mb-6">
         <CardContent className="p-6">
           <h2 className="text-2xl font-bold text-center mb-4">Quiz Results</h2>
@@ -91,6 +91,7 @@ const QuizResults = ({ questions, answers, onRetryIncorrect }: QuizResultsProps)
         {questions.map(question => {
           const answer = answers.find(a => a.questionId === question.id);
           const isCorrect = answer?.correct || false;
+          const selectedOptionIndex = answer?.selectedOptionIndex || 0;
           
           return (
             <Card key={question.id} className="mb-3">
@@ -102,6 +103,24 @@ const QuizResults = ({ questions, answers, onRetryIncorrect }: QuizResultsProps)
                       ? question.question.substring(0, 60) + '...' 
                       : question.question}
                   </h4>
+                </div>
+                
+                <div className="mt-3 mb-3 space-y-2">
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-xs font-medium">Correct Option:</span>
+                    <div className="p-2 text-sm rounded bg-green-100 dark:bg-green-900">
+                      {question.options[question.correctIndex]}
+                    </div>
+                  </div>
+                  
+                  {!isCorrect && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-xs font-medium">Your Option:</span>
+                      <div className="p-2 text-sm rounded bg-red-100 dark:bg-red-900">
+                        {question.options[selectedOptionIndex]}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="mt-3">

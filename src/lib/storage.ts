@@ -1,5 +1,5 @@
 
-import { AppStorage, Question, QuizAttempt } from "@/types";
+import { AppStorage, Question, QuizAttempt, CustomQuiz } from "@/types";
 
 const STORAGE_KEY = 'quizzineApp';
 
@@ -11,12 +11,14 @@ const initialStorage: AppStorage = {
     darkMode: false,
     reminders: false,
     lastVisitedWeek: 1,
+    currentCourseId: 'cs101', // Default course
   },
   confidenceRatings: {},
   streaks: {
     lastActive: new Date().toISOString().split('T')[0],
     currentStreak: 1,
   },
+  customQuizzes: [],
 };
 
 // Get storage from localStorage
@@ -140,23 +142,77 @@ export const updateSettings = (settings: Partial<AppStorage['settings']>): void 
   saveStorage(storage);
 };
 
-// Get questions from week
+// Get current course ID
+export const getCurrentCourseId = (): string => {
+  const storage = getStorage();
+  return storage.settings.currentCourseId || 'cs101';
+};
+
+// Set current course ID
+export const setCurrentCourseId = (courseId: string): void => {
+  const storage = getStorage();
+  storage.settings.currentCourseId = courseId;
+  saveStorage(storage);
+};
+
+// Get all courses
+export const getAllCourses = async (): Promise<any[]> => {
+  try {
+    const response = await fetch('/questions.json');
+    const data = await response.json();
+    return data.courses;
+  } catch (error) {
+    console.error('Failed to fetch courses', error);
+    return [];
+  }
+};
+
+// Get questions for week in current course
 export const getQuestionsForWeek = async (week: number): Promise<Question[]> => {
   try {
     const response = await fetch('/questions.json');
-    const questions: Question[] = await response.json();
-    return questions.filter(q => q.week === week);
+    const data = await response.json();
+    const courseId = getCurrentCourseId();
+    
+    const course = data.courses.find((c: any) => c.id === courseId);
+    if (!course) return [];
+    
+    return course.questions.filter((q: Question) => q.week === week);
   } catch (error) {
     console.error('Failed to fetch questions', error);
     return [];
   }
 };
 
-// Get all questions
+// Get all questions from current course
 export const getAllQuestions = async (): Promise<Question[]> => {
   try {
     const response = await fetch('/questions.json');
-    return await response.json();
+    const data = await response.json();
+    const courseId = getCurrentCourseId();
+    
+    const course = data.courses.find((c: any) => c.id === courseId);
+    if (!course) return [];
+    
+    return course.questions;
+  } catch (error) {
+    console.error('Failed to fetch questions', error);
+    return [];
+  }
+};
+
+// Get questions from all courses
+export const getAllQuestionsFromAllCourses = async (): Promise<Question[]> => {
+  try {
+    const response = await fetch('/questions.json');
+    const data = await response.json();
+    
+    let allQuestions: Question[] = [];
+    data.courses.forEach((course: any) => {
+      allQuestions = [...allQuestions, ...course.questions];
+    });
+    
+    return allQuestions;
   } catch (error) {
     console.error('Failed to fetch questions', error);
     return [];
@@ -176,7 +232,7 @@ export const shuffleArray = <T>(array: T[]): T[] => {
 // Get bookmarked questions
 export const getBookmarkedQuestions = async (): Promise<Question[]> => {
   const storage = getStorage();
-  const allQuestions = await getAllQuestions();
+  const allQuestions = await getAllQuestionsFromAllCourses();
   return allQuestions.filter(q => storage.bookmarks.includes(q.id));
 };
 
@@ -193,4 +249,35 @@ export const getSmartBoostQuestions = async (count: number = 10): Promise<Questi
   });
   
   return sortedQuestions.slice(0, count);
+};
+
+// Custom Quiz functions
+export const saveCustomQuiz = (quiz: CustomQuiz): void => {
+  const storage = getStorage();
+  storage.customQuizzes.push(quiz);
+  saveStorage(storage);
+};
+
+export const getCustomQuizzes = (): CustomQuiz[] => {
+  const storage = getStorage();
+  return storage.customQuizzes;
+};
+
+export const getCustomQuizById = (id: string): CustomQuiz | undefined => {
+  const storage = getStorage();
+  return storage.customQuizzes.find(quiz => quiz.id === id);
+};
+
+export const getQuestionsForCustomQuiz = async (quizId: string): Promise<Question[]> => {
+  const quiz = getCustomQuizById(quizId);
+  if (!quiz) return [];
+  
+  const allQuestions = await getAllQuestionsFromAllCourses();
+  return allQuestions.filter(q => quiz.questionIds.includes(q.id));
+};
+
+export const deleteCustomQuiz = (id: string): void => {
+  const storage = getStorage();
+  storage.customQuizzes = storage.customQuizzes.filter(quiz => quiz.id !== id);
+  saveStorage(storage);
 };

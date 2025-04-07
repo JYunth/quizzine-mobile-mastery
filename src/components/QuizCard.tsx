@@ -1,11 +1,10 @@
 
 import { toggleBookmark } from "@/lib/storage";
 import { Question, Answer } from "@/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bookmark, Clock } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 
 interface QuizCardProps {
@@ -26,7 +25,17 @@ const QuizCard = ({
   onBookmarkChange
 }: QuizCardProps) => {
   const [selectedOption, setSelectedOption] = useState<number | null>(userAnswer !== undefined ? userAnswer : null);
-  const [startTime] = useState<number>(Date.now());
+  const [startTime, setStartTime] = useState<number>(Date.now());
+  
+  // Reset selected option when question changes
+  useEffect(() => {
+    if (userAnswer !== undefined) {
+      setSelectedOption(userAnswer);
+    } else {
+      setSelectedOption(null);
+      setStartTime(Date.now());
+    }
+  }, [question.id, userAnswer]);
   
   const handleOptionSelect = (index: number) => {
     if (userAnswer !== undefined) return; // Don't allow changing if in review mode

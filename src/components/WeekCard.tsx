@@ -1,6 +1,5 @@
 
 import { getStorage } from "@/lib/storage";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Question } from "@/types";
 import { Link } from "react-router-dom";
@@ -8,7 +7,7 @@ import { Link } from "react-router-dom";
 interface WeekCardProps {
   week: number;
   questionsCount: number;
-  tags: string[];
+  tags?: string[];
   weekTitle?: string;
 }
 
@@ -41,14 +40,14 @@ const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps) => {
     <Link to={`/quiz/weekly/${week}`}>
       <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold mb-1">
               {weekTitle ? `Week ${week} - ${weekTitle}` : `Week ${week}`}
             </h3>
-            <span className={`text-xs px-2 py-1 rounded-full text-white ${statusColor}`}>{status}</span>
+            <span className={`text-xs px-2 py-1 rounded-full text-white ${statusColor} self-start mb-3`}>{status}</span>
           </div>
           
-          <div className="mt-3">
+          <div className="mt-1">
             <div className="w-full bg-secondary rounded-full h-2">
               <div 
                 className="bg-primary rounded-full h-2" 
@@ -59,6 +58,19 @@ const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps) => {
               {completedCount} of {questionsCount} questions correct
             </p>
           </div>
+          
+          {tags && tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1">
+              {tags.map((tag, index) => (
+                <span 
+                  key={index} 
+                  className="text-xs bg-secondary px-2 py-1 rounded-full"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </Link>

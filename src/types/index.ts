@@ -1,7 +1,15 @@
 
+// Course type
+export interface Course {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 // Question types
 export interface Question {
   id: string;
+  courseId: string;
   week: number;
   weekTitle?: string;
   question: string;
@@ -24,10 +32,20 @@ export interface QuizAttempt {
   id: string;
   timestamp: string;
   mode: QuizMode;
+  courseId?: string;
   week?: number;
   answers: Answer[];
   score: number;
   totalQuestions: number;
+}
+
+// Custom Quiz
+export interface CustomQuiz {
+  id: string;
+  name: string;
+  timestamp: string;
+  questionIds: string[];
+  courseId?: string;
 }
 
 // App storage in localStorage
@@ -38,12 +56,14 @@ export interface AppStorage {
     darkMode: boolean;
     reminders: boolean;
     lastVisitedWeek: number;
+    currentCourseId?: string;
   };
   confidenceRatings: { [questionId: string]: number };
   streaks: {
     lastActive: string;
     currentStreak: number;
   };
+  customQuizzes: CustomQuiz[];
 }
 
 // Quiz modes

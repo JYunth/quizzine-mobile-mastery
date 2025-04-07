@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
@@ -10,16 +11,17 @@ import {
   getSmartBoostQuestions,
   saveQuizAttempt,
   shuffleArray,
-  isBookmarked
+  isBookmarked,
+  getCurrentCourseId,
+  getQuestionsForCustomQuiz
 } from "@/lib/storage";
 import { Answer, Question, QuizAttempt, QuizMode } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 
 const Quiz = () => {
-  const { mode = 'weekly', week } = useParams<{ mode: QuizMode; week?: string }>();
+  const { mode = 'weekly', week, id } = useParams<{ mode: QuizMode; week?: string; id?: string }>();
   const navigate = useNavigate();
   
   const [loading, setLoading] = useState(true);
@@ -54,8 +56,12 @@ const Quiz = () => {
           loadedQuestions = await getSmartBoostQuestions(10);
           break;
         case 'custom':
-          navigate('/');
-          return;
+          if (!id) {
+            navigate('/custom-quizzes');
+            return;
+          }
+          loadedQuestions = await getQuestionsForCustomQuiz(id);
+          break;
       }
       
       const shuffled = shuffleArray(loadedQuestions);
@@ -65,7 +71,7 @@ const Quiz = () => {
     };
     
     loadQuestions();
-  }, [mode, week, navigate]);
+  }, [mode, week, id, navigate]);
   
   useEffect(() => {
     if (questions.length > 0) {
@@ -89,6 +95,7 @@ const Quiz = () => {
       id: Date.now().toString(),
       timestamp: new Date().toISOString(),
       mode,
+      courseId: getCurrentCourseId(),
       week: week ? parseInt(week) : undefined,
       answers: [...answers],
       score: answers.filter(a => a.correct).length,

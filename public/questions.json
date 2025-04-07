@@ -1,123 +1,184 @@
 
-[
-  {
-    "id": "w1q1",
-    "week": 1,
-    "weekTitle": "Programming Basics",
-    "question": "What is the output of the following C code?\n\nint main() {\n  int x = 5;\n  printf(\"%d\", x++);\n  return 0;\n}",
-    "options": ["4", "5", "6", "Compilation error"],
-    "correctIndex": 1,
-    "explanation": "The post-increment operator (x++) returns the value of x before the increment. So printf prints 5, and then x becomes 6.",
-    "tags": ["C", "operators"]
-  },
-  {
-    "id": "w1q2",
-    "week": 1,
-    "weekTitle": "Programming Basics",
-    "question": "Which data structure is most suitable for implementing a LIFO (Last In First Out) approach?",
-    "options": ["Queue", "Stack", "Linked List", "Binary Tree"],
-    "correctIndex": 1,
-    "explanation": "A stack follows the Last In First Out (LIFO) principle, where the last element added is the first one to be removed.",
-    "tags": ["data structures", "stack"]
-  },
-  {
-    "id": "w1q3",
-    "week": 1,
-    "weekTitle": "Programming Basics",
-    "question": "What is the time complexity of binary search?",
-    "options": ["O(n)", "O(log n)", "O(n log n)", "O(n²)"],
-    "correctIndex": 1,
-    "explanation": "Binary search has a time complexity of O(log n) because in each step, it halves the search space.",
-    "tags": ["algorithms", "time complexity"]
-  },
-  {
-    "id": "w2q1",
-    "week": 2,
-    "weekTitle": "Web Development",
-    "question": "What does HTML stand for?",
-    "options": ["Hyper Text Markup Language", "Hyper Transfer Markup Language", "High Text Markup Language", "Hyper Text Making Language"],
-    "correctIndex": 0,
-    "explanation": "HTML stands for Hyper Text Markup Language, which is the standard markup language for creating web pages.",
-    "tags": ["web", "HTML"]
-  },
-  {
-    "id": "w2q2",
-    "week": 2,
-    "weekTitle": "Web Development",
-    "question": "Which of the following is not a valid CSS selector?",
-    "options": [".class", "#id", "*", "!element"],
-    "correctIndex": 3,
-    "explanation": "!element is not a valid CSS selector. The valid selectors are .class (for class), #id (for id), and * (universal selector).",
-    "tags": ["web", "CSS"]
-  },
-  {
-    "id": "w2q3",
-    "week": 2,
-    "weekTitle": "Web Development",
-    "question": "What is the purpose of the 'DOCTYPE' declaration in HTML?",
-    "options": ["To declare the document type and version of HTML", "To link external stylesheets", "To define the document title", "To include JavaScript code"],
-    "correctIndex": 0,
-    "explanation": "The DOCTYPE declaration is used to tell the browser what version of HTML the page is written in.",
-    "tags": ["web", "HTML"]
-  },
-  {
-    "id": "w3q1",
-    "week": 3,
-    "weekTitle": "JavaScript Fundamentals",
-    "question": "Which of these is not a JavaScript data type?",
-    "options": ["String", "Boolean", "Float", "Undefined"],
-    "correctIndex": 2,
-    "explanation": "Float is not a distinct data type in JavaScript. JavaScript has Number which can represent both integers and floating-point numbers.",
-    "tags": ["JavaScript", "data types"]
-  },
-  {
-    "id": "w3q2",
-    "week": 3,
-    "weekTitle": "JavaScript Fundamentals",
-    "question": "What will be the output of: console.log(typeof null)?",
-    "options": ["null", "undefined", "object", "number"],
-    "correctIndex": 2,
-    "explanation": "In JavaScript, typeof null returns 'object', which is actually a historical bug in the language that was never fixed for backward compatibility.",
-    "tags": ["JavaScript", "data types"]
-  },
-  {
-    "id": "w3q3",
-    "week": 3,
-    "weekTitle": "JavaScript Fundamentals",
-    "question": "What is closure in JavaScript?",
-    "options": ["A way to secure JavaScript code", "A function having access to the parent scope, even after the parent function has closed", "A method to close browser windows", "A technique to terminate JavaScript execution"],
-    "correctIndex": 1,
-    "explanation": "A closure in JavaScript is a function that has access to its outer function's scope, even after the outer function has returned.",
-    "tags": ["JavaScript", "functions"]
-  },
-  {
-    "id": "w4q1",
-    "week": 4,
-    "weekTitle": "Design Patterns",
-    "question": "Which design pattern is used to create an object in one step instead of multiple steps?",
-    "options": ["Factory Method", "Builder", "Prototype", "Singleton"],
-    "correctIndex": 1,
-    "explanation": "The Builder pattern is used to create complex objects step by step, where the steps can be combined to create different representations of the object.",
-    "tags": ["design patterns", "object creation"]
-  },
-  {
-    "id": "w4q2",
-    "week": 4,
-    "weekTitle": "Design Patterns",
-    "question": "What is the main benefit of using the MVC (Model-View-Controller) architecture?",
-    "options": ["Faster application execution", "Easy testing and maintenance", "Reduced memory usage", "Better database integration"],
-    "correctIndex": 1,
-    "explanation": "MVC architecture separates an application into three main components: Model (data), View (UI), and Controller (logic), making the code more modular, reusable, and easier to test and maintain.",
-    "tags": ["architecture", "design patterns"]
-  },
-  {
-    "id": "w4q3",
-    "week": 4,
-    "weekTitle": "Design Patterns",
-    "question": "Which SOLID principle states that a class should have only one reason to change?",
-    "options": ["Single Responsibility Principle", "Open/Closed Principle", "Liskov Substitution Principle", "Interface Segregation Principle"],
-    "correctIndex": 0,
-    "explanation": "The Single Responsibility Principle (SRP) states that a class should have only one reason to change, meaning it should have only one responsibility or job.",
-    "tags": ["SOLID", "design principles"]
-  }
-]
+{
+  "courses": [
+    {
+      "id": "cs101",
+      "name": "Computer Science 101",
+      "description": "Introduction to programming and computer science fundamentals.",
+      "questions": [
+        {
+          "id": "cs101-w1q1",
+          "courseId": "cs101",
+          "week": 1,
+          "weekTitle": "Programming Basics",
+          "question": "What is the output of the following C code?\n\nint main() {\n  int x = 5;\n  printf(\"%d\", x++);\n  return 0;\n}",
+          "options": ["4", "5", "6", "Compilation error"],
+          "correctIndex": 1,
+          "explanation": "The post-increment operator (x++) returns the value of x before the increment. So printf prints 5, and then x becomes 6.",
+          "tags": ["C", "operators"]
+        },
+        {
+          "id": "cs101-w1q2",
+          "courseId": "cs101",
+          "week": 1,
+          "weekTitle": "Programming Basics",
+          "question": "Which data structure is most suitable for implementing a LIFO (Last In First Out) approach?",
+          "options": ["Queue", "Stack", "Linked List", "Binary Tree"],
+          "correctIndex": 1,
+          "explanation": "A stack follows the Last In First Out (LIFO) principle, where the last element added is the first one to be removed.",
+          "tags": ["data structures", "stack"]
+        },
+        {
+          "id": "cs101-w1q3",
+          "courseId": "cs101",
+          "week": 1,
+          "weekTitle": "Programming Basics",
+          "question": "What is the time complexity of binary search?",
+          "options": ["O(n)", "O(log n)", "O(n log n)", "O(n²)"],
+          "correctIndex": 1,
+          "explanation": "Binary search has a time complexity of O(log n) because in each step, it halves the search space.",
+          "tags": ["algorithms", "time complexity"]
+        },
+        {
+          "id": "cs101-w2q1",
+          "courseId": "cs101",
+          "week": 2,
+          "weekTitle": "Web Development",
+          "question": "What does HTML stand for?",
+          "options": ["Hyper Text Markup Language", "Hyper Transfer Markup Language", "High Text Markup Language", "Hyper Text Making Language"],
+          "correctIndex": 0,
+          "explanation": "HTML stands for Hyper Text Markup Language, which is the standard markup language for creating web pages.",
+          "tags": ["web", "HTML"]
+        },
+        {
+          "id": "cs101-w2q2",
+          "courseId": "cs101",
+          "week": 2,
+          "weekTitle": "Web Development",
+          "question": "Which of the following is not a valid CSS selector?",
+          "options": [".class", "#id", "*", "!element"],
+          "correctIndex": 3,
+          "explanation": "!element is not a valid CSS selector. The valid selectors are .class (for class), #id (for id), and * (universal selector).",
+          "tags": ["web", "CSS"]
+        },
+        {
+          "id": "cs101-w2q3",
+          "courseId": "cs101",
+          "week": 2,
+          "weekTitle": "Web Development",
+          "question": "What is the purpose of the 'DOCTYPE' declaration in HTML?",
+          "options": ["To declare the document type and version of HTML", "To link external stylesheets", "To define the document title", "To include JavaScript code"],
+          "correctIndex": 0,
+          "explanation": "The DOCTYPE declaration is used to tell the browser what version of HTML the page is written in.",
+          "tags": ["web", "HTML"]
+        },
+        {
+          "id": "cs101-w3q1",
+          "courseId": "cs101",
+          "week": 3,
+          "weekTitle": "JavaScript Fundamentals",
+          "question": "Which of these is not a JavaScript data type?",
+          "options": ["String", "Boolean", "Float", "Undefined"],
+          "correctIndex": 2,
+          "explanation": "Float is not a distinct data type in JavaScript. JavaScript has Number which can represent both integers and floating-point numbers.",
+          "tags": ["JavaScript", "data types"]
+        },
+        {
+          "id": "cs101-w3q2",
+          "courseId": "cs101",
+          "week": 3,
+          "weekTitle": "JavaScript Fundamentals",
+          "question": "What will be the output of: console.log(typeof null)?",
+          "options": ["null", "undefined", "object", "number"],
+          "correctIndex": 2,
+          "explanation": "In JavaScript, typeof null returns 'object', which is actually a historical bug in the language that was never fixed for backward compatibility.",
+          "tags": ["JavaScript", "data types"]
+        },
+        {
+          "id": "cs101-w3q3",
+          "courseId": "cs101",
+          "week": 3,
+          "weekTitle": "JavaScript Fundamentals",
+          "question": "What is closure in JavaScript?",
+          "options": ["A way to secure JavaScript code", "A function having access to the parent scope, even after the parent function has closed", "A method to close browser windows", "A technique to terminate JavaScript execution"],
+          "correctIndex": 1,
+          "explanation": "A closure in JavaScript is a function that has access to its outer function's scope, even after the outer function has returned.",
+          "tags": ["JavaScript", "functions"]
+        },
+        {
+          "id": "cs101-w4q1",
+          "courseId": "cs101",
+          "week": 4,
+          "weekTitle": "Design Patterns",
+          "question": "Which design pattern is used to create an object in one step instead of multiple steps?",
+          "options": ["Factory Method", "Builder", "Prototype", "Singleton"],
+          "correctIndex": 1,
+          "explanation": "The Builder pattern is used to create complex objects step by step, where the steps can be combined to create different representations of the object.",
+          "tags": ["design patterns", "object creation"]
+        },
+        {
+          "id": "cs101-w4q2",
+          "courseId": "cs101",
+          "week": 4,
+          "weekTitle": "Design Patterns",
+          "question": "What is the main benefit of using the MVC (Model-View-Controller) architecture?",
+          "options": ["Faster application execution", "Easy testing and maintenance", "Reduced memory usage", "Better database integration"],
+          "correctIndex": 1,
+          "explanation": "MVC architecture separates an application into three main components: Model (data), View (UI), and Controller (logic), making the code more modular, reusable, and easier to test and maintain.",
+          "tags": ["architecture", "design patterns"]
+        },
+        {
+          "id": "cs101-w4q3",
+          "courseId": "cs101",
+          "week": 4,
+          "weekTitle": "Design Patterns",
+          "question": "Which SOLID principle states that a class should have only one reason to change?",
+          "options": ["Single Responsibility Principle", "Open/Closed Principle", "Liskov Substitution Principle", "Interface Segregation Principle"],
+          "correctIndex": 0,
+          "explanation": "The Single Responsibility Principle (SRP) states that a class should have only one reason to change, meaning it should have only one responsibility or job.",
+          "tags": ["SOLID", "design principles"]
+        }
+      ]
+    },
+    {
+      "id": "math101",
+      "name": "Mathematics 101",
+      "description": "Fundamentals of mathematics including algebra, calculus, and statistics.",
+      "questions": [
+        {
+          "id": "math101-w1q1",
+          "courseId": "math101",
+          "week": 1,
+          "weekTitle": "Algebra Basics",
+          "question": "Solve for x: 2x + 5 = 15",
+          "options": ["x = 5", "x = 7.5", "x = 10", "x = 3"],
+          "correctIndex": 0,
+          "explanation": "To solve for x, subtract 5 from both sides: 2x = 10. Then divide both sides by 2: x = 5.",
+          "tags": ["algebra", "equations"]
+        },
+        {
+          "id": "math101-w1q2",
+          "courseId": "math101",
+          "week": 1,
+          "weekTitle": "Algebra Basics",
+          "question": "What is the value of y when y = x² + 2x - 3 and x = 2?",
+          "options": ["3", "5", "7", "9"],
+          "correctIndex": 2,
+          "explanation": "Substitute x = 2 into the equation: y = 2² + 2(2) - 3 = 4 + 4 - 3 = 5",
+          "tags": ["algebra", "functions"]
+        },
+        {
+          "id": "math101-w2q1",
+          "courseId": "math101",
+          "week": 2,
+          "weekTitle": "Calculus Introduction",
+          "question": "What is the derivative of f(x) = x²?",
+          "options": ["f'(x) = x", "f'(x) = 2x", "f'(x) = 2", "f'(x) = x²"],
+          "correctIndex": 1,
+          "explanation": "The power rule for derivatives states that if f(x) = xⁿ, then f'(x) = n·xⁿ⁻¹. For f(x) = x², n = 2, so f'(x) = 2x¹ = 2x.",
+          "tags": ["calculus", "derivatives"]
+        }
+      ]
+    }
+  ]
+}

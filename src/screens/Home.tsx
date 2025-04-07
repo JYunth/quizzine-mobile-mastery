@@ -1,11 +1,13 @@
 
 import { useEffect, useState } from "react";
 import PageLayout from "@/components/PageLayout";
-import { getAllQuestions, getStorage, updateStreak } from "@/lib/storage";
-import { Question } from "@/types";
+import { getAllQuestions, getStorage, updateStreak, getAllCourses, getCurrentCourseId, setCurrentCourseId } from "@/lib/storage";
+import { Course, Question } from "@/types";
 import WeekCard from "@/components/WeekCard";
 import ActionCard from "@/components/ActionCard";
-import { Brain, Zap } from "lucide-react";
+import { Brain, Zap, ListChecks } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const Home = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -15,6 +17,17 @@ const Home = () => {
     title?: string 
   }>>(new Map());
   const [streak, setStreak] = useState(0);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [currentCourseId, setCurrentCourseState] = useState<string>(getCurrentCourseId());
+  
+  useEffect(() => {
+    const loadCourses = async () => {
+      const allCourses = await getAllCourses();
+      setCourses(allCourses);
+    };
+    
+    loadCourses();
+  }, []);
   
   useEffect(() => {
     const loadData = async () => {
@@ -53,7 +66,13 @@ const Home = () => {
     };
     
     loadData();
-  }, []);
+  }, [currentCourseId]);
+  
+  const handleCourseChange = (courseId: string) => {
+    setCurrentCourseState(courseId);
+    setCurrentCourseId(courseId);
+    toast(`Switched to ${courses.find(c => c.id === courseId)?.name}`);
+  };
   
   // Get unique weeks and sort them
   const weeks = Array.from(weekData.keys()).sort((a, b) => a - b);
@@ -61,6 +80,24 @@ const Home = () => {
   return (
     <PageLayout title="Quizzine">
       <div className="max-w-4xl mx-auto">
+        <div className="mb-6 flex justify-between items-center">
+          <div className="flex-grow">
+            <h2 className="text-lg font-semibold mb-1">Course</h2>
+            <Select value={currentCourseId} onValueChange={handleCourseChange}>
+              <SelectTrigger className="w-full max-w-xs">
+                <SelectValue placeholder="Select a course" />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map(course => (
+                  <SelectItem key={course.id} value={course.id}>
+                    {course.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
         <div className="mb-6 p-4 bg-primary/10 rounded-lg">
           <div className="flex justify-between items-center">
             <div>
@@ -78,7 +115,7 @@ const Home = () => {
         </div>
         
         <h2 className="font-semibold text-xl mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <ActionCard 
             title="Smart Boost" 
             description="Focus on questions you find difficult"
@@ -92,6 +129,13 @@ const Home = () => {
             icon={Zap}
             to="/quiz/full"
             color="bg-amber-600"
+          />
+          <ActionCard 
+            title="Custom Quizzes" 
+            description="Create and take custom quizzes"
+            icon={ListChecks}
+            to="/custom-quizzes"
+            color="bg-blue-600"
           />
         </div>
         

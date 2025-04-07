@@ -12,6 +12,7 @@ import Quiz from "./screens/Quiz";
 import Bookmarks from "./screens/Bookmarks";
 import Dashboard from "./screens/Dashboard";
 import Settings from "./screens/Settings";
+import CustomQuizzes from "./screens/CustomQuizzes";
 import NotFound from "./pages/NotFound";
 import { getStorage } from "./lib/storage";
 
@@ -30,15 +31,17 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner position="top-center" closeButton />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/quiz/:mode" element={<Quiz />} />
             <Route path="/quiz/:mode/:week" element={<Quiz />} />
+            <Route path="/quiz/:mode/:id" element={<Quiz />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/custom-quizzes" element={<CustomQuizzes />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

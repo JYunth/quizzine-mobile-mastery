@@ -1,198 +1,215 @@
 
 import { useState, useEffect } from "react";
 import PageLayout from "@/components/PageLayout";
-import { Button } from "@/components/ui/button";
+import { getStorage, updateSettings, exportStorage, importStorage, resetStorage } from "@/lib/storage";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { exportStorage, getStorage, importStorage, resetStorage, updateSettings } from "@/lib/storage";
-import { Download, Upload, RotateCcw, X, Check, Moon, Sun, Info } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { AppStorage } from "@/types";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import AboutDialog from "@/components/AboutDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { DownloadCloud, UploadCloud, RotateCcw, Info } from "lucide-react";
+import AboutModal from "@/components/AboutModal";
 
 const Settings = () => {
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<AppStorage["settings"]>({
     darkMode: false,
-    reminders: false
+    reminders: false,
+    lastVisitedWeek: 1,
   });
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
-  const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
-  const navigate = useNavigate();
+  const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
   
   useEffect(() => {
     const storage = getStorage();
     setSettings(storage.settings);
-    
-    // Apply dark mode
-    if (storage.settings.darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
   }, []);
   
-  const handleSettingChange = (key: keyof typeof settings, value: boolean) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    updateSettings({ [key]: value });
+  const handleToggleDarkMode = (checked: boolean) => {
+    updateSettings({ darkMode: checked });
+    setSettings({ ...settings, darkMode: checked });
     
-    // Apply dark mode immediately
-    if (key === 'darkMode') {
-      if (value) {
-        document.documentElement.classList.add('dark');
-        toast("Dark mode is enabled");
-      } else {
-        document.documentElement.classList.remove('dark');
-        toast("Dark mode is disabled");
-      }
+    if (checked) {
+      document.documentElement.classList.add('dark');
+      toast("Dark mode is enabled");
+    } else {
+      document.documentElement.classList.remove('dark');
+      toast("Dark mode is disabled");
     }
-  };
-  
-  const handleResetData = () => {
-    resetStorage();
-    setResetConfirmOpen(false);
-    toast('All data has been reset');
-    // Navigate to home after reset
-    navigate('/');
   };
   
   const handleExport = () => {
     exportStorage();
-    toast('Data has been exported successfully');
+    toast("Data exported successfully");
   };
   
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleImportClick = () => {
+    fileInput?.click();
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      if (content) {
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      try {
         const success = importStorage(content);
         if (success) {
-          toast('Data has been imported successfully');
-          window.location.reload();
+          // Reload settings after import
+          const storage = getStorage();
+          setSettings(storage.settings);
+          
+          // Apply dark mode setting
+          if (storage.settings.darkMode) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          
+          toast("Data imported successfully");
         } else {
-          toast('Failed to import data. Invalid format.');
+          toast("Failed to import data");
         }
+      } catch (error) {
+        toast("Invalid file format");
       }
     };
+    
     reader.readAsText(file);
+    // Reset file input
+    e.target.value = '';
+  };
+  
+  const handleReset = () => {
+    resetStorage();
+    // Reload settings after reset
+    const storage = getStorage();
+    setSettings(storage.settings);
+    
+    // Apply dark mode setting (should be false after reset)
+    document.documentElement.classList.remove('dark');
+    
+    toast("All data has been reset");
   };
   
   return (
     <PageLayout title="Settings">
       <div className="max-w-2xl mx-auto">
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>Customize how the app looks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                {settings.darkMode ? (
-                  <Moon className="text-primary" size={20} />
-                ) : (
-                  <Sun className="text-amber-500" size={20} />
-                )}
-                <Label htmlFor="dark-mode">Dark Mode</Label>
-              </div>
-              <Switch 
-                id="dark-mode" 
-                checked={settings.darkMode}
-                onCheckedChange={(checked) => handleSettingChange('darkMode', checked)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Data Management</CardTitle>
-            <CardDescription>Export, import, or reset your data</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                onClick={handleExport}
-                variant="outline" 
-                className="flex items-center"
-              >
-                <Download size={18} className="mr-2" />
-                Export Data
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="relative flex items-center overflow-hidden"
-                onClick={() => document.getElementById('import-file')?.click()}
-              >
-                <Upload size={18} className="mr-2" />
-                Import Data
-                <input 
-                  id="import-file" 
-                  type="file" 
-                  accept=".json" 
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={handleImport}
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-lg font-medium mb-2">Appearance</h2>
+            <div className="bg-card rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">Dark Mode</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Enable dark mode for the app
+                  </p>
+                </div>
+                <Switch 
+                  checked={settings.darkMode} 
+                  onCheckedChange={handleToggleDarkMode}
                 />
-              </Button>
+              </div>
             </div>
-            
-            <Dialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
-              <DialogTrigger asChild>
-                <Button variant="destructive" className="w-full">
-                  <RotateCcw size={18} className="mr-2" />
-                  Reset All Data
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Reset all data?</DialogTitle>
-                  <DialogDescription>
-                    This will delete all your quizzes, bookmarks, and settings. This action cannot be undone.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className="flex gap-2 sm:gap-0">
-                  <Button variant="outline" onClick={() => setResetConfirmOpen(false)}>
-                    <X size={18} className="mr-2" />
-                    Cancel
+          </div>
+          
+          <div>
+            <h2 className="text-lg font-medium mb-2">Data Management</h2>
+            <div className="bg-card rounded-lg border p-4 space-y-4">
+              <div>
+                <h3 className="font-medium mb-2">Export & Import Data</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Export your quiz data and progress to a file, or import from a previously exported file
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={handleExport}>
+                    <DownloadCloud className="mr-2 h-4 w-4" />
+                    Export Data
                   </Button>
-                  <Button variant="destructive" onClick={handleResetData}>
-                    <RotateCcw size={18} className="mr-2" />
-                    Reset Data
+                  <Button variant="outline" onClick={handleImportClick}>
+                    <UploadCloud className="mr-2 h-4 w-4" />
+                    Import Data
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>About Quizzine</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Version 1.0.0
-            </p>
-            <Button 
-              variant="outline" 
-              onClick={() => setAboutDialogOpen(true)}
-              className="flex items-center"
-            >
-              <Info size={18} className="mr-2" />
-              About Quizzine
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <AboutDialog open={aboutDialogOpen} onOpenChange={setAboutDialogOpen} />
+                  <input 
+                    type="file" 
+                    accept=".json" 
+                    className="hidden" 
+                    onChange={handleFileChange}
+                    ref={ref => setFileInput(ref)}
+                  />
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h3 className="font-medium mb-2">Reset Data</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Reset all app data including quizzes, bookmarks, and settings
+                </p>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Reset All Data
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action will permanently delete all your data, including quiz attempts,
+                        bookmarks, and settings. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleReset}>
+                        Yes, reset all data
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h2 className="text-lg font-medium mb-2">About</h2>
+            <div className="bg-card rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">About Quizzine</h3>
+                  <p className="text-sm text-muted-foreground">
+                    View information about this application
+                  </p>
+                </div>
+                <AboutModal
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      <Info className="mr-2 h-4 w-4" />
+                      View Info
+                    </Button>
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </PageLayout>
   );
