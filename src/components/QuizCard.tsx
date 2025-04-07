@@ -1,4 +1,5 @@
-import { toggleBookmark, isBookmarked } from "@/lib/storage";
+
+import { toggleBookmark } from "@/lib/storage";
 import { Question, Answer } from "@/types";
 import { useState } from "react";
 import { Bookmark, Clock } from "lucide-react";
@@ -12,17 +13,20 @@ interface QuizCardProps {
   onAnswer: (answer: Answer) => void;
   showExplanation?: boolean;
   userAnswer?: number;
+  isBookmarked: boolean;
+  onBookmarkChange?: (isBookmarked: boolean) => void;
 }
 
 const QuizCard = ({ 
   question, 
   onAnswer, 
   showExplanation = false,
-  userAnswer 
+  userAnswer,
+  isBookmarked,
+  onBookmarkChange
 }: QuizCardProps) => {
   const [selectedOption, setSelectedOption] = useState<number | null>(userAnswer !== undefined ? userAnswer : null);
   const [startTime] = useState<number>(Date.now());
-  const [bookmarked, setBookmarked] = useState<boolean>(isBookmarked(question.id));
   
   const handleOptionSelect = (index: number) => {
     if (userAnswer !== undefined) return; // Don't allow changing if in review mode
@@ -45,8 +49,8 @@ const QuizCard = ({
     e.preventDefault();
     e.stopPropagation();
     const isNowBookmarked = toggleBookmark(question.id);
-    setBookmarked(isNowBookmarked);
-    toast(isNowBookmarked ? "Bookmark added" : "Bookmark removed");
+    onBookmarkChange?.(isNowBookmarked);
+    toast(isNowBookmarked ? "Question has been bookmarked" : "Bookmark has been removed");
   };
   
   const renderOptions = () => {
@@ -91,13 +95,13 @@ const QuizCard = ({
       <CardContent className="p-4 pt-6">
         <div className="flex justify-between items-start mb-4">
           <div className="text-sm text-muted-foreground">
-            Week {question.week} · {question.tags.join(" · ")}
+            Week {question.week} · {question.tags?.join(" · ")}
           </div>
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={handleToggleBookmark}
-            className={bookmarked ? "text-amber-500" : ""}
+            className={isBookmarked ? "text-amber-500" : ""}
           >
             <Bookmark size={20} />
           </Button>

@@ -9,9 +9,10 @@ interface WeekCardProps {
   week: number;
   questionsCount: number;
   tags: string[];
+  weekTitle?: string;
 }
 
-const WeekCard = ({ week, questionsCount, tags }: WeekCardProps) => {
+const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps) => {
   const storage = getStorage();
   
   // Get completed questions for this week
@@ -41,7 +42,9 @@ const WeekCard = ({ week, questionsCount, tags }: WeekCardProps) => {
       <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Week {week}</h3>
+            <h3 className="text-lg font-semibold">
+              {weekTitle ? `Week ${week} - ${weekTitle}` : `Week ${week}`}
+            </h3>
             <span className={`text-xs px-2 py-1 rounded-full text-white ${statusColor}`}>{status}</span>
           </div>
           
@@ -55,19 +58,6 @@ const WeekCard = ({ week, questionsCount, tags }: WeekCardProps) => {
             <p className="text-xs text-muted-foreground mt-1">
               {completedCount} of {questionsCount} questions correct
             </p>
-          </div>
-          
-          <div className="mt-3 flex flex-wrap gap-1">
-            {tags.slice(0, 3).map(tag => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-            {tags.length > 3 && (
-              <Badge variant="outline" className="text-xs">
-                +{tags.length - 3} more
-              </Badge>
-            )}
           </div>
         </CardContent>
       </Card>

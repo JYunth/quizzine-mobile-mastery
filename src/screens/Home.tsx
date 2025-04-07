@@ -5,11 +5,15 @@ import { getAllQuestions, getStorage, updateStreak } from "@/lib/storage";
 import { Question } from "@/types";
 import WeekCard from "@/components/WeekCard";
 import ActionCard from "@/components/ActionCard";
-import { Brain, Calendar, Zap, Settings } from "lucide-react";
+import { Brain, Zap } from "lucide-react";
 
 const Home = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [weekData, setWeekData] = useState<Map<number, { count: number, tags: string[] }>>(new Map());
+  const [weekData, setWeekData] = useState<Map<number, { 
+    count: number, 
+    tags: string[], 
+    title?: string 
+  }>>(new Map());
   const [streak, setStreak] = useState(0);
   
   useEffect(() => {
@@ -18,22 +22,24 @@ const Home = () => {
       setQuestions(allQuestions);
       
       // Process questions by week
-      const weekMap = new Map<number, { count: number, tags: string[] }>();
+      const weekMap = new Map<number, { count: number, tags: string[], title?: string }>();
       
       allQuestions.forEach(q => {
         if (!weekMap.has(q.week)) {
-          weekMap.set(q.week, { count: 0, tags: [] });
+          weekMap.set(q.week, { count: 0, tags: [], title: q.weekTitle });
         }
         
         const weekInfo = weekMap.get(q.week)!;
         weekInfo.count++;
         
-        // Add unique tags
-        q.tags.forEach(tag => {
-          if (!weekInfo.tags.includes(tag)) {
-            weekInfo.tags.push(tag);
-          }
-        });
+        // Add unique tags if they exist
+        if (q.tags) {
+          q.tags.forEach(tag => {
+            if (!weekInfo.tags.includes(tag)) {
+              weekInfo.tags.push(tag);
+            }
+          });
+        }
       });
       
       setWeekData(weekMap);
@@ -99,6 +105,7 @@ const Home = () => {
                 week={week} 
                 questionsCount={data.count}
                 tags={data.tags}
+                weekTitle={data.title}
               />
             );
           })}

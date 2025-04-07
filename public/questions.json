@@ -3,6 +3,7 @@
   {
     "id": "w1q1",
     "week": 1,
+    "weekTitle": "Programming Basics",
     "question": "What is the output of the following C code?\n\nint main() {\n  int x = 5;\n  printf(\"%d\", x++);\n  return 0;\n}",
     "options": ["4", "5", "6", "Compilation error"],
     "correctIndex": 1,
@@ -12,6 +13,7 @@
   {
     "id": "w1q2",
     "week": 1,
+    "weekTitle": "Programming Basics",
     "question": "Which data structure is most suitable for implementing a LIFO (Last In First Out) approach?",
     "options": ["Queue", "Stack", "Linked List", "Binary Tree"],
     "correctIndex": 1,
@@ -21,6 +23,7 @@
   {
     "id": "w1q3",
     "week": 1,
+    "weekTitle": "Programming Basics",
     "question": "What is the time complexity of binary search?",
     "options": ["O(n)", "O(log n)", "O(n log n)", "O(n²)"],
     "correctIndex": 1,
@@ -30,6 +33,7 @@
   {
     "id": "w2q1",
     "week": 2,
+    "weekTitle": "Web Development",
     "question": "What does HTML stand for?",
     "options": ["Hyper Text Markup Language", "Hyper Transfer Markup Language", "High Text Markup Language", "Hyper Text Making Language"],
     "correctIndex": 0,
@@ -39,6 +43,7 @@
   {
     "id": "w2q2",
     "week": 2,
+    "weekTitle": "Web Development",
     "question": "Which of the following is not a valid CSS selector?",
     "options": [".class", "#id", "*", "!element"],
     "correctIndex": 3,
@@ -48,6 +53,7 @@
   {
     "id": "w2q3",
     "week": 2,
+    "weekTitle": "Web Development",
     "question": "What is the purpose of the 'DOCTYPE' declaration in HTML?",
     "options": ["To declare the document type and version of HTML", "To link external stylesheets", "To define the document title", "To include JavaScript code"],
     "correctIndex": 0,
@@ -57,6 +63,7 @@
   {
     "id": "w3q1",
     "week": 3,
+    "weekTitle": "JavaScript Fundamentals",
     "question": "Which of these is not a JavaScript data type?",
     "options": ["String", "Boolean", "Float", "Undefined"],
     "correctIndex": 2,
@@ -66,6 +73,7 @@
   {
     "id": "w3q2",
     "week": 3,
+    "weekTitle": "JavaScript Fundamentals",
     "question": "What will be the output of: console.log(typeof null)?",
     "options": ["null", "undefined", "object", "number"],
     "correctIndex": 2,
@@ -75,6 +83,7 @@
   {
     "id": "w3q3",
     "week": 3,
+    "weekTitle": "JavaScript Fundamentals",
     "question": "What is closure in JavaScript?",
     "options": ["A way to secure JavaScript code", "A function having access to the parent scope, even after the parent function has closed", "A method to close browser windows", "A technique to terminate JavaScript execution"],
     "correctIndex": 1,
@@ -84,6 +93,7 @@
   {
     "id": "w4q1",
     "week": 4,
+    "weekTitle": "Design Patterns",
     "question": "Which design pattern is used to create an object in one step instead of multiple steps?",
     "options": ["Factory Method", "Builder", "Prototype", "Singleton"],
     "correctIndex": 1,
@@ -93,6 +103,7 @@
   {
     "id": "w4q2",
     "week": 4,
+    "weekTitle": "Design Patterns",
     "question": "What is the main benefit of using the MVC (Model-View-Controller) architecture?",
     "options": ["Faster application execution", "Easy testing and maintenance", "Reduced memory usage", "Better database integration"],
     "correctIndex": 1,
@@ -102,6 +113,7 @@
   {
     "id": "w4q3",
     "week": 4,
+    "weekTitle": "Design Patterns",
     "question": "Which SOLID principle states that a class should have only one reason to change?",
     "options": ["Single Responsibility Principle", "Open/Closed Principle", "Liskov Substitution Principle", "Interface Segregation Principle"],
     "correctIndex": 0,

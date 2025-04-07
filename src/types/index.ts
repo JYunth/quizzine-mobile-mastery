@@ -3,11 +3,12 @@
 export interface Question {
   id: string;
   week: number;
+  weekTitle?: string;
   question: string;
   options: string[];
   correctIndex: number;
   explanation: string;
-  tags: string[];
+  tags?: string[];
 }
 
 // User answer for a single question

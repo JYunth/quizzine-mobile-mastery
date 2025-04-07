@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
@@ -10,7 +9,8 @@ import {
   getQuestionsForWeek,
   getSmartBoostQuestions,
   saveQuizAttempt,
-  shuffleArray
+  shuffleArray,
+  isBookmarked
 } from "@/lib/storage";
 import { Answer, Question, QuizAttempt, QuizMode } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ const Quiz = () => {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
+  const [currentBookmarked, setCurrentBookmarked] = useState(false);
   
   useEffect(() => {
     const loadQuestions = async () => {
@@ -53,12 +54,10 @@ const Quiz = () => {
           loadedQuestions = await getSmartBoostQuestions(10);
           break;
         case 'custom':
-          // Custom mode would require more parameters, redirecting to home for now
           navigate('/');
           return;
       }
       
-      // Shuffle questions
       const shuffled = shuffleArray(loadedQuestions);
       setQuestions(shuffled);
       
@@ -68,46 +67,46 @@ const Quiz = () => {
     loadQuestions();
   }, [mode, week, navigate]);
   
+  useEffect(() => {
+    if (questions.length > 0) {
+      const currentQuestion = questions[currentQuestionIndex];
+      setCurrentBookmarked(isBookmarked(currentQuestion.id));
+    }
+  }, [currentQuestionIndex, questions]);
+  
   const handleAnswer = (answer: Answer) => {
     setAnswers([...answers, answer]);
     
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // End of quiz
       finishQuiz();
     }
   };
   
   const finishQuiz = () => {
-    // Create attempt object
     const attempt: QuizAttempt = {
       id: Date.now().toString(),
       timestamp: new Date().toISOString(),
       mode,
       week: week ? parseInt(week) : undefined,
-      answers: [...answers], // Make a copy
+      answers: [...answers],
       score: answers.filter(a => a.correct).length,
       totalQuestions: questions.length
     };
     
-    // Save attempt
     saveQuizAttempt(attempt);
     
-    // Show results
     setShowResults(true);
   };
   
   const handleRetryIncorrect = () => {
-    // Get IDs of incorrectly answered questions
     const incorrectIds = answers
       .filter(a => !a.correct)
       .map(a => a.questionId);
     
-    // Filter questions
     const incorrectQuestions = questions.filter(q => incorrectIds.includes(q.id));
     
-    // Reset state with incorrect questions
     setQuestions(incorrectQuestions);
     setCurrentQuestionIndex(0);
     setAnswers([]);
@@ -136,7 +135,11 @@ const Quiz = () => {
   const getQuizTitle = () => {
     switch(mode) {
       case 'weekly':
-        return `Week ${week} Quiz`;
+        if (!week) return 'Quiz';
+        const weekTitle = questions.length > 0 && questions[0].weekTitle 
+          ? `Week ${week} - ${questions[0].weekTitle}` 
+          : `Week ${week}`;
+        return weekTitle;
       case 'full':
         return 'Full Quiz';
       case 'bookmark':
@@ -222,6 +225,8 @@ const Quiz = () => {
           onAnswer={handleAnswer}
           showExplanation={reviewMode}
           userAnswer={userAnswer}
+          isBookmarked={currentBookmarked}
+          onBookmarkChange={(isNowBookmarked) => setCurrentBookmarked(isNowBookmarked)}
         />
         
         {reviewMode && (

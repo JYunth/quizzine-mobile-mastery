@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { exportStorage, getStorage, importStorage, resetStorage, updateSettings } from "@/lib/storage";
-import { Download, Upload, RotateCcw, X, Check, Moon, Sun } from "lucide-react";
+import { Download, Upload, RotateCcw, X, Check, Moon, Sun, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import AboutDialog from "@/components/AboutDialog";
 
 const Settings = () => {
   const [settings, setSettings] = useState({
@@ -18,6 +19,7 @@ const Settings = () => {
     reminders: false
   });
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -41,12 +43,12 @@ const Settings = () => {
     if (key === 'darkMode') {
       if (value) {
         document.documentElement.classList.add('dark');
+        toast("Dark mode is enabled");
       } else {
         document.documentElement.classList.remove('dark');
+        toast("Dark mode is disabled");
       }
     }
-    
-    toast(`${key} ${value ? 'enabled' : 'disabled'}`);
   };
   
   const handleResetData = () => {
@@ -59,7 +61,7 @@ const Settings = () => {
   
   const handleExport = () => {
     exportStorage();
-    toast('Data exported successfully');
+    toast('Data has been exported successfully');
   };
   
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +74,7 @@ const Settings = () => {
       if (content) {
         const success = importStorage(content);
         if (success) {
-          toast('Data imported successfully');
+          toast('Data has been imported successfully');
           window.location.reload();
         } else {
           toast('Failed to import data. Invalid format.');
@@ -104,23 +106,6 @@ const Settings = () => {
                 id="dark-mode" 
                 checked={settings.darkMode}
                 onCheckedChange={(checked) => handleSettingChange('darkMode', checked)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Notifications</CardTitle>
-            <CardDescription>Manage notification settings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="reminders">Study Reminders</Label>
-              <Switch 
-                id="reminders" 
-                checked={settings.reminders}
-                onCheckedChange={(checked) => handleSettingChange('reminders', checked)}
               />
             </div>
           </CardContent>
@@ -193,15 +178,21 @@ const Settings = () => {
             <CardTitle>About Quizzine</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-2">
+            <p className="text-muted-foreground mb-4">
               Version 1.0.0
             </p>
-            <p className="text-sm">
-              Quizzine is an open-source, offline-first quiz app for NPTEL or similar course content.
-              All data is stored locally in your browser.
-            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => setAboutDialogOpen(true)}
+              className="flex items-center"
+            >
+              <Info size={18} className="mr-2" />
+              About Quizzine
+            </Button>
           </CardContent>
         </Card>
+        
+        <AboutDialog open={aboutDialogOpen} onOpenChange={setAboutDialogOpen} />
       </div>
     </PageLayout>
   );
