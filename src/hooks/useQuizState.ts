@@ -61,7 +61,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
           loadedQuestions = await getBookmarkedQuestions();
           break;
         case 'smart':
-          loadedQuestions = await getSmartBoostQuestions(10);
+          loadedQuestions = await getSmartBoostQuestions(); // Removed argument
           break;
           case 'custom':
             if (!id) {

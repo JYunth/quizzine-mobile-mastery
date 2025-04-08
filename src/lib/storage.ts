@@ -235,8 +235,8 @@ export const getBookmarkedQuestions = async (): Promise<Question[]> => {
   return allQuestions.filter(q => storage.bookmarks.includes(q.id));
 };
 
-// Get "smart boost" questions (prioritizing low confidence questions) from cache
-export const getSmartBoostQuestions = async (count: number = 10): Promise<Question[]> => {
+// Get "smart boost" questions (only rated questions with confidence < 3) from cache
+export const getSmartBoostQuestions = async (): Promise<Question[]> => { // Removed count parameter
   const storage = getStorage();
   const courseId = getCurrentCourseId();
   const allQuestions = await getCachedAllQuestions(); // Use cached data
@@ -244,14 +244,22 @@ export const getSmartBoostQuestions = async (count: number = 10): Promise<Questi
   // Filter for current course first
   const courseQuestions = allQuestions.filter(q => q.courseId === courseId);
 
-  // Sort by confidence (undefined or low confidence first)
-  const sortedQuestions = [...courseQuestions].sort((a, b) => {
-    const confidenceA = storage.confidenceRatings[a.id] || 0;
-    const confidenceB = storage.confidenceRatings[b.id] || 0;
+  // Filter for questions that have been rated AND have confidence < 3
+  const lowConfidenceRatedQuestions = courseQuestions.filter(q => {
+    const confidence = storage.confidenceRatings[q.id];
+    // Check if confidence is defined (meaning it's rated) AND less than 3
+    return confidence !== undefined && confidence < 3; 
+  });
+
+  // Sort the filtered questions by confidence (lowest first: 0, 1, 2)
+  const sortedQuestions = lowConfidenceRatedQuestions.sort((a, b) => {
+    // We know confidence is defined here because of the filter above
+    const confidenceA = storage.confidenceRatings[a.id]!; 
+    const confidenceB = storage.confidenceRatings[b.id]!;
     return confidenceA - confidenceB;
   });
   
-  return sortedQuestions.slice(0, count);
+  return sortedQuestions; // Return all matching questions
 };
 
 // Custom Quiz functions
