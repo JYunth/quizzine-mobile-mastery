@@ -1,5 +1,5 @@
 
-import { getStorage } from "@/lib/storage";
+import { getStorage, getCurrentCourseId } from "@/lib/storage"; // Import getCurrentCourseId
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge"; // Import Badge
 import { Question } from "@/types";
@@ -14,15 +14,26 @@ interface WeekCardProps {
 
 const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps) => {
   const storage = getStorage();
-  
-  // Get completed questions for this week
-  const completedCount = storage.attempts
-    .filter(attempt => attempt.mode === 'weekly' && attempt.week === week)
-    .reduce((sum, attempt) => sum + attempt.answers.filter(a => a.correct).length, 0);
+  const currentCourseId = getCurrentCourseId(); // Get the current course ID
+
+  // Find the best attempt score for this specific week and course
+  const relevantAttempts = storage.attempts.filter(
+    attempt =>
+      attempt.mode === 'weekly' &&
+      attempt.week === week &&
+      attempt.courseId === currentCourseId // Filter by course ID
+  );
+
+  // Find the highest score among relevant attempts
+  const bestScore = relevantAttempts.reduce((maxScore, attempt) => {
+    // Ensure attempt.score is a number, default to 0 if not
+    const currentScore = typeof attempt.score === 'number' ? attempt.score : 0;
+    return Math.max(maxScore, currentScore);
+  }, 0); // Start with a max score of 0
   
   // Calculate completion percentage
   const completionPercentage = questionsCount > 0 
-    ? Math.min(100, Math.round((completedCount / questionsCount) * 100))
+    ? Math.min(100, Math.round((bestScore / questionsCount) * 100)) // Use bestScore
     : 0;
   
   // Determine status and badge variant
@@ -58,7 +69,7 @@ const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps) => {
               />
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {completedCount} of {questionsCount} questions correct
+              {bestScore} of {questionsCount} questions correct {/* Use bestScore */}
             </p>
           </div>
           
