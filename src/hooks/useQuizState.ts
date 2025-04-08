@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react"; // Import useMemo
 import { Answer, Question, QuizMode } from "@/types";
 import { 
+  getStorage, // Import getStorage
   getAllQuestions,
   getBookmarkedQuestions,
   getQuestionsForWeek,
@@ -26,19 +27,29 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
   const [showResults, setShowResults] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
   const [currentBookmarked, setCurrentBookmarked] = useState(false);
+  const [displayQuestion, setDisplayQuestion] = useState<Question | null>(null); // State for current question with potentially shuffled options
   
   // Load questions based on the mode
   useEffect(() => {
+    // console.log(`useQuizState: useEffect triggered. mode=${mode}, week=${week}, id=${id}`); // Removed log
     const loadQuestions = async () => {
-      // console.log(`useQuizState Effect: mode=${mode}, week=${week}, id=${id}`); // Removed log
+      // console.log("useQuizState: loadQuestions async function started."); // Removed log
       setLoading(true);
       
       let loadedQuestions: Question[] = [];
       
-      try { // Add try block
+      try { 
+        // console.log("useQuizState: Entering try block."); // Removed log
         switch(mode) {
         case 'weekly':
-          if (!week) return;
+          // console.log("useQuizState: Case 'weekly' entered."); // Removed log
+          if (!week) {
+            // console.warn("useQuizState: Weekly mode but no week provided."); // Removed log
+            setQuestions([]);
+            setLoading(false);
+            return;
+          }
+          // console.log(`useQuizState: Calling getQuestionsForWeek with week: ${week}`); // Removed log
           loadedQuestions = await getQuestionsForWeek(parseInt(week));
           break;
         case 'full':
@@ -79,34 +90,80 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
     loadQuestions();
   }, [mode, week, id]); // Dependencies remain the same
   
-  // Update bookmark status when currentQuestionIndex changes
+  // Effect to prepare the question for display (shuffle options if hard mode is on)
   useEffect(() => {
-    if (questions.length > 0) {
+    if (questions.length > 0 && currentQuestionIndex < questions.length) {
       const currentQuestion = questions[currentQuestionIndex];
-      setCurrentBookmarked(isBookmarked(currentQuestion.id));
+      const { settings } = getStorage(); // Get current settings
+
+      if (settings.hardMode) {
+        const originalCorrectOption = currentQuestion.options[currentQuestion.correctIndex];
+        // Shuffle a copy of the options array
+        const shuffledOptions = shuffleArray([...currentQuestion.options]); 
+        const newCorrectIndex = shuffledOptions.indexOf(originalCorrectOption);
+        
+        setDisplayQuestion({
+          ...currentQuestion,
+          options: shuffledOptions,
+          correctIndex: newCorrectIndex, // Use the new correct index for display and checking
+        });
+      } else {
+        setDisplayQuestion(currentQuestion); // Use original question if not hard mode
+      }
+    } else {
+      setDisplayQuestion(null); // Clear if no questions or index out of bounds
     }
-  }, [currentQuestionIndex, questions]);
+  }, [currentQuestionIndex, questions]); // Re-run when question or index changes
+
+  // Update bookmark status based on displayQuestion
+  useEffect(() => {
+    if (displayQuestion) {
+      setCurrentBookmarked(isBookmarked(displayQuestion.id));
+    } else {
+      setCurrentBookmarked(false);
+    }
+  }, [displayQuestion]); // Update when displayQuestion changes
   
-  const handleAnswer = (answer: Answer) => {
-    setAnswers([...answers, answer]);
+  const handleAnswer = (rawAnswer: Omit<Answer, 'correct' | 'questionId'>) => {
+    if (!displayQuestion) return; // Guard if no question is displayed
+
+    // Check correctness against the potentially adjusted correctIndex in displayQuestion
+    const correct = rawAnswer.selectedOptionIndex === displayQuestion.correctIndex;
+    // Get the text of the option the user actually selected from the potentially shuffled options
+    const selectedText = displayQuestion.options[rawAnswer.selectedOptionIndex];
+
+    const finalAnswer: Answer = {
+      ...rawAnswer,
+      questionId: displayQuestion.id, // Use ID from the displayed question
+      selectedOptionText: selectedText, // Store the selected text
+      correct: correct,
+    };
+
+    setAnswers([...answers, finalAnswer]); // Add the processed answer
     
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      finishQuiz();
+      // Pass the final answer to finishQuiz when it's the last question
+      finishQuiz(finalAnswer); 
     }
   };
   
-  const finishQuiz = () => {
+  // Accept the last answer as a parameter
+  const finishQuiz = (lastAnswer: Answer) => { 
+    // Correctly construct the final list using the state *before* the last answer 
+    // and the lastAnswer object passed in.
+    const finalAnswersList = [...answers, lastAnswer]; 
+    
     const attempt = {
       id: Date.now().toString(),
       timestamp: new Date().toISOString(),
       mode,
       courseId: getCurrentCourseId(),
       week: week ? parseInt(week) : undefined,
-      answers: [...answers],
-      score: answers.filter(a => a.correct).length,
-      totalQuestions: questions.length
+      answers: finalAnswersList, // Use the correctly constructed list
+      score: finalAnswersList.filter(a => a.correct).length, // Calculate score from the correct list
+      totalQuestions: questions.length,
     };
     
     import("@/lib/storage").then(({ saveQuizAttempt }) => {
@@ -157,6 +214,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
     reviewMode,
     currentBookmarked,
     setCurrentBookmarked,
+    displayQuestion, // Return the question prepared for display
     handleAnswer,
     handleRetryIncorrect,
     handleReviewQuiz,

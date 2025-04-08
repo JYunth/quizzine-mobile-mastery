@@ -11,6 +11,7 @@ const initialStorage: AppStorage = {
   settings: {
     darkMode: false,
     reminders: false,
+    hardMode: false, // Add hard mode setting
     lastVisitedWeek: 1,
     currentCourseId: 'cs101', // Default course
   },
@@ -163,9 +164,46 @@ export const getAllCourses = async (): Promise<Course[]> => {
 
 // Get questions for week in current course from cache
 export const getQuestionsForWeek = async (week: number): Promise<Question[]> => {
-  const { allQuestions } = await getQuestionData();
-  const courseId = getCurrentCourseId();
-  return allQuestions.filter(q => q.courseId === courseId && q.week === week);
+  
+  let questionData;
+  try {
+    questionData = await getQuestionData(); 
+  } catch (error) {
+    console.error("getQuestionsForWeek: Error awaiting getQuestionData:", error);
+    return []; // Return empty on error
+  }
+
+  // Check if questionData exists before accessing properties
+  if (!questionData) {
+      console.warn("getQuestionsForWeek: questionData is null or undefined after await!");
+      return [];
+  }
+
+  const allQuestionsFromData = questionData.allQuestions; // Access directly now
+
+  // *** Add try...catch around courseId retrieval and filtering ***
+  try {
+    const courseId = getCurrentCourseId();
+
+    if (!allQuestionsFromData || allQuestionsFromData.length === 0) {
+        console.warn("getQuestionsForWeek: allQuestionsFromData is empty or undefined before filtering!");
+        return []; // Return early if no questions to filter
+    }
+    
+    // *** RESTORED FILTERING LOGIC ***
+    const filteredQuestions = allQuestionsFromData.filter(q => {
+      // Check types explicitly for extra safety, though likely not the issue now
+      const courseMatch = String(q.courseId) === String(courseId);
+      const weekMatch = Number(q.week) === Number(week);
+      return courseMatch && weekMatch;
+    });
+
+    return filteredQuestions;
+
+  } catch (error) {
+    console.error(`getQuestionsForWeek: Error during courseId retrieval or filtering for week ${week}:`, error);
+    return []; // Return empty array if an error occurs here
+  }
 };
 
 // Get all questions from current course from cache

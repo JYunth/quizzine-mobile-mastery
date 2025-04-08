@@ -21,7 +21,8 @@ export interface Question {
 // User answer for a single question
 export interface Answer {
   questionId: string;
-  selectedOptionIndex: number;
+  selectedOptionIndex: number; // Index relative to options presented at the time
+  selectedOptionText: string; // The actual text the user selected
   correct: boolean;
   timeTaken: number; // in milliseconds
 }
@@ -54,6 +55,7 @@ export interface AppStorage {
   settings: {
     darkMode: boolean;
     reminders: boolean;
+    hardMode: boolean; // Add hard mode setting
     lastVisitedWeek: number;
     currentCourseId?: string;
   };

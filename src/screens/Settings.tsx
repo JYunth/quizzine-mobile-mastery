@@ -27,6 +27,7 @@ const Settings = () => {
   const [settings, setSettings] = useState<AppStorage["settings"]>({
     darkMode: false,
     reminders: false,
+    hardMode: false, // Initialize hardMode state
     lastVisitedWeek: 1,
   });
   const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
@@ -47,6 +48,12 @@ const Settings = () => {
       document.documentElement.classList.remove('dark');
       toast("Dark mode is disabled");
     }
+  };
+  
+  const handleToggleHardMode = (checked: boolean) => {
+    updateSettings({ hardMode: checked });
+    setSettings({ ...settings, hardMode: checked });
+    toast(`Hard mode ${checked ? 'enabled' : 'disabled'}`);
   };
   
   const handleExport = () => {
@@ -122,6 +129,19 @@ const Settings = () => {
                 <Switch 
                   checked={settings.darkMode} 
                   onCheckedChange={handleToggleDarkMode}
+                />
+              </div>
+              <Separator className="my-4" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">Hard Mode</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Shuffle options
+                  </p>
+                </div>
+                <Switch 
+                  checked={settings.hardMode} 
+                  onCheckedChange={handleToggleHardMode}
                 />
               </div>
             </div>

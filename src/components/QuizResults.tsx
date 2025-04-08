@@ -48,8 +48,8 @@ const QuizResults = ({ questions, answers, onRetryIncorrect, onReviewQuiz }: Qui
   };
   
   const getUserAnswer = (answer: Answer) => {
-    const question = questions.find(q => q.id === answer.questionId);
-    return question ? question.options[answer.selectedOptionIndex] : "";
+    // Directly return the stored text of the user's selected option
+    return answer.selectedOptionText || ""; // Fallback to empty string if somehow missing
   };
   
   return (
