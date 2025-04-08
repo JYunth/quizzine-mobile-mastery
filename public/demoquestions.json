@@ -1,0 +1,252 @@
+{
+  "courses": [
+    {
+      "id": "cs101",
+      "name": "Computer Science 101",
+      "description": "Introduction to programming and computer science fundamentals.",
+      "questions": [
+        {
+          "id": "cs101-w1q1",
+          "courseId": "cs101",
+          "week": 1,
+          "weekTitle": "Programming Basics",
+          "question": "What is the output of the following C code?\n\nint main() {\n  int x = 5;\n  printf(\"%d\", x++);\n  return 0;\n}",
+          "options": [
+            "4",
+            "5",
+            "6",
+            "Compilation error"
+          ],
+          "correctIndex": 1,
+          "tags": []
+        },
+        {
+          "id": "cs101-w1q2",
+          "courseId": "cs101",
+          "week": 1,
+          "weekTitle": "Programming Basics",
+          "question": "Which data structure is most suitable for implementing a LIFO (Last In First Out) approach?",
+          "options": [
+            "Queue",
+            "Stack",
+            "Linked List",
+            "Binary Tree"
+          ],
+          "correctIndex": 1,
+          "tags": []
+        },
+        {
+          "id": "cs101-w1q3",
+          "courseId": "cs101",
+          "week": 1,
+          "weekTitle": "Programming Basics",
+          "question": "What is the time complexity of binary search?",
+          "options": [
+            "O(n)",
+            "O(log n)",
+            "O(n log n)",
+            "O(n²)"
+          ],
+          "correctIndex": 1,
+          "tags": []
+        },
+        {
+          "id": "cs101-w2q1",
+          "courseId": "cs101",
+          "week": 2,
+          "weekTitle": "Web Development",
+          "question": "What does HTML stand for?",
+          "options": [
+            "Hyper Text Markup Language",
+            "Hyper Transfer Markup Language",
+            "High Text Markup Language",
+            "Hyper Text Making Language"
+          ],
+          "correctIndex": 0,
+          "tags": []
+        },
+        {
+          "id": "cs101-w2q2",
+          "courseId": "cs101",
+          "week": 2,
+          "weekTitle": "Web Development",
+          "question": "Which of the following is not a valid CSS selector?",
+          "options": [
+            ".class",
+            "#id",
+            "*",
+            "!element"
+          ],
+          "correctIndex": 3,
+          "tags": []
+        },
+        {
+          "id": "cs101-w2q3",
+          "courseId": "cs101",
+          "week": 2,
+          "weekTitle": "Web Development",
+          "question": "What is the purpose of the 'DOCTYPE' declaration in HTML?",
+          "options": [
+            "To declare the document type and version of HTML",
+            "To link external stylesheets",
+            "To define the document title",
+            "To include JavaScript code"
+          ],
+          "correctIndex": 0,
+          "tags": []
+        },
+        {
+          "id": "cs101-w3q1",
+          "courseId": "cs101",
+          "week": 3,
+          "weekTitle": "JavaScript Fundamentals",
+          "question": "Which of these is not a JavaScript data type?",
+          "options": [
+            "String",
+            "Boolean",
+            "Float",
+            "Undefined"
+          ],
+          "correctIndex": 2,
+          "tags": []
+        },
+        {
+          "id": "cs101-w3q2",
+          "courseId": "cs101",
+          "week": 3,
+          "weekTitle": "JavaScript Fundamentals",
+          "question": "What will be the output of: console.log(typeof null)?",
+          "options": [
+            "null",
+            "undefined",
+            "object",
+            "number"
+          ],
+          "correctIndex": 2,
+          "tags": []
+        },
+        {
+          "id": "cs101-w3q3",
+          "courseId": "cs101",
+          "week": 3,
+          "weekTitle": "JavaScript Fundamentals",
+          "question": "What is closure in JavaScript?",
+          "options": [
+            "A way to secure JavaScript code",
+            "A function having access to the parent scope, even after the parent function has closed",
+            "A method to close browser windows",
+            "A technique to terminate JavaScript execution"
+          ],
+          "correctIndex": 1,
+          "tags": []
+        },
+        {
+          "id": "cs101-w4q1",
+          "courseId": "cs101",
+          "week": 4,
+          "weekTitle": "Design Patterns",
+          "question": "Which design pattern is used to create an object in one step instead of multiple steps?",
+          "options": [
+            "Factory Method",
+            "Builder",
+            "Prototype",
+            "Singleton"
+          ],
+          "correctIndex": 1,
+          "tags": []
+        },
+        {
+          "id": "cs101-w4q2",
+          "courseId": "cs101",
+          "week": 4,
+          "weekTitle": "Design Patterns",
+          "question": "What is the main benefit of using the MVC (Model-View-Controller) architecture?",
+          "options": [
+            "Faster application execution",
+            "Easy testing and maintenance",
+            "Reduced memory usage",
+            "Better database integration"
+          ],
+          "correctIndex": 1,
+          "tags": []
+        },
+        {
+          "id": "cs101-w4q3",
+          "courseId": "cs101",
+          "week": 4,
+          "weekTitle": "Design Patterns",
+          "question": "Which SOLID principle states that a class should have only one reason to change?",
+          "options": [
+            "Single Responsibility Principle",
+            "Open/Closed Principle",
+            "Liskov Substitution Principle",
+            "Interface Segregation Principle"
+          ],
+          "correctIndex": 0,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "id": "math101",
+      "name": "Mathematics 101",
+      "description": "Fundamentals of mathematics including algebra, calculus, and statistics.",
+      "questions": [
+        {
+          "id": "math101-w1q1",
+          "courseId": "math101",
+          "week": 1,
+          "weekTitle": "Algebra Basics",
+          "question": "Solve for x: 2x + 5 = 15",
+          "options": [
+            "x = 5",
+            "x = 7.5",
+            "x = 10",
+            "x = 3"
+          ],
+          "correctIndex": 0,
+          "tags": [
+            "algebra",
+            "equations"
+          ]
+        },
+        {
+          "id": "math101-w1q2",
+          "courseId": "math101",
+          "week": 1,
+          "weekTitle": "Algebra Basics",
+          "question": "What is the value of y when y = x² + 2x - 3 and x = 2?",
+          "options": [
+            "3",
+            "5",
+            "7",
+            "9"
+          ],
+          "correctIndex": 2,
+          "tags": [
+            "algebra",
+            "functions"
+          ]
+        },
+        {
+          "id": "math101-w2q1",
+          "courseId": "math101",
+          "week": 2,
+          "weekTitle": "Calculus Introduction",
+          "question": "What is the derivative of f(x) = x²?",
+          "options": [
+            "f'(x) = x",
+            "f'(x) = 2x",
+            "f'(x) = 2",
+            "f'(x) = x²"
+          ],
+          "correctIndex": 1,
+          "tags": [
+            "calculus",
+            "derivatives"
+          ]
+        }
+      ]
+    }
+  ]
+}
