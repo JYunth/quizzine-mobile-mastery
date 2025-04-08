@@ -3,7 +3,8 @@ import { safeFetch } from "@/lib/quizUtils"; // Assuming safeFetch is still rele
 
 interface QuestionData {
   courses: Course[];
-  allQuestions: Question[];
+  allQuestions: Question[]; // Keep the array for potential other uses
+  questionsById: Map<string, Question>; // Add Map for efficient lookup
 }
 
 let cachedData: QuestionData | null = null;
@@ -19,7 +20,7 @@ interface RawCourseData {
 
 // Fetches data from the JSON file
 const fetchData = async (): Promise<QuestionData> => {
-  console.log("Fetching and processing questions data..."); // Log for debugging
+  // console.log("Fetching and processing questions data..."); // Removed log
   // Fetch raw data with the nested structure
   const rawData = await safeFetch<{ courses: RawCourseData[] }>('/questions.json', { courses: [] });
 
@@ -51,8 +52,14 @@ const fetchData = async (): Promise<QuestionData> => {
     });
   }
 
-  console.log(`Fetched ${fetchedCourses.length} courses and ${allQuestions.length} total questions.`);
-  return { courses: fetchedCourses, allQuestions };
+  // console.log(`Fetched ${fetchedCourses.length} courses and ${allQuestions.length} total questions.`); // Removed log
+  
+  // Create the Map for efficient lookup
+  const questionsById = new Map<string, Question>();
+  allQuestions.forEach(q => questionsById.set(q.id, q));
+  
+  // console.log(`Created questionsById Map with ${questionsById.size} entries.`); // Removed log
+  return { courses: fetchedCourses, allQuestions, questionsById };
 };
 
 // Gets the cached data, fetching if necessary
@@ -73,7 +80,7 @@ export const getQuestionData = async (): Promise<QuestionData> => {
     // Reset promise to allow retrying on next call
     dataPromise = null; 
     // Return empty structure on error to prevent crashes downstream
-    return { courses: [], allQuestions: [] }; 
+    return { courses: [], allQuestions: [], questionsById: new Map() }; 
   } finally {
     // Clear the promise once resolved or rejected to allow refetching if needed later
     // Or keep it if we want strict singleton behavior even after failure
@@ -89,5 +96,17 @@ export const getCachedCourses = async (): Promise<Course[]> => {
 
 export const getCachedAllQuestions = async (): Promise<Question[]> => {
   const data = await getQuestionData();
-  return data.allQuestions;
+  return data.allQuestions; // Return the original array if needed elsewhere
+};
+
+// New function to get the Map directly
+export const getCachedQuestionsMap = async (): Promise<Map<string, Question>> => {
+  const data = await getQuestionData();
+  return data.questionsById;
+};
+
+// New function to get a single question efficiently
+export const getCachedQuestionById = async (id: string): Promise<Question | undefined> => {
+  const map = await getCachedQuestionsMap();
+  return map.get(id);
 };

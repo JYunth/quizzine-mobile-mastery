@@ -30,11 +30,13 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
   // Load questions based on the mode
   useEffect(() => {
     const loadQuestions = async () => {
+      // console.log(`useQuizState Effect: mode=${mode}, week=${week}, id=${id}`); // Removed log
       setLoading(true);
       
       let loadedQuestions: Question[] = [];
       
-      switch(mode) {
+      try { // Add try block
+        switch(mode) {
         case 'weekly':
           if (!week) return;
           loadedQuestions = await getQuestionsForWeek(parseInt(week));
@@ -48,20 +50,34 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
         case 'smart':
           loadedQuestions = await getSmartBoostQuestions(10);
           break;
-        case 'custom':
-          if (!id) return;
-          loadedQuestions = await getQuestionsForCustomQuiz(id);
-          break;
+          case 'custom':
+            if (!id) {
+              // console.warn("useQuizState: Custom mode but no ID provided."); // Removed log
+              setQuestions([]); // Ensure state is cleared
+              setLoading(false); // Ensure loading stops
+              return; 
+            }
+            // console.log(`useQuizState: Loading custom quiz with ID: ${id}`); // Removed log
+            loadedQuestions = await getQuestionsForCustomQuiz(id);
+            // console.log(`useQuizState: Loaded ${loadedQuestions.length} questions for custom quiz ${id}`); // Removed log
+            break;
+        }
+        
+        // console.log("useQuizState: Shuffling questions..."); // Removed log
+        const shuffled = shuffleArray(loadedQuestions);
+        setQuestions(shuffled);
+        
+        // console.log("useQuizState: Setting loading to false."); // Removed log
+        setLoading(false);
+      } catch (error) {
+        console.error("useQuizState: Error loading questions:", error); // Keep error log
+        setQuestions([]); // Clear questions on error
+        setLoading(false); // Ensure loading is set to false even on error
       }
-      
-      const shuffled = shuffleArray(loadedQuestions);
-      setQuestions(shuffled);
-      
-      setLoading(false);
     };
     
     loadQuestions();
-  }, [mode, week, id]);
+  }, [mode, week, id]); // Dependencies remain the same
   
   // Update bookmark status when currentQuestionIndex changes
   useEffect(() => {

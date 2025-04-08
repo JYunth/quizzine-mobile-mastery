@@ -1,5 +1,6 @@
 import { AppStorage, Question, QuizAttempt, CustomQuiz, Course } from "@/types";
-import { getQuestionData, getCachedCourses, getCachedAllQuestions } from "./questionStore"; // Import from the new store
+// Import the new Map getter from questionStore
+import { getQuestionData, getCachedCourses, getCachedAllQuestions, getCachedQuestionsMap } from "./questionStore"; 
 
 const STORAGE_KEY = 'quizzineApp';
 
@@ -245,13 +246,29 @@ export const getCustomQuizById = (id: string): CustomQuiz | undefined => {
   return storage.customQuizzes.find(quiz => quiz.id === id);
 };
 
-// Get questions for custom quiz from cache
+// Get questions for custom quiz using the optimized Map lookup
 export const getQuestionsForCustomQuiz = async (quizId: string): Promise<Question[]> => {
   const quiz = getCustomQuizById(quizId);
-  if (!quiz) return [];
+  if (!quiz || quiz.questionIds.length === 0) {
+    // console.log(`Custom quiz ${quizId} not found or has no questions.`); // Removed log
+    return [];
+  }
 
-  const allQuestions = await getCachedAllQuestions(); // Use cached data
-  return allQuestions.filter(q => quiz.questionIds.includes(q.id));
+  // console.log(`Fetching questions for custom quiz ${quizId} using Map lookup...`); // Removed log
+  const questionsMap = await getCachedQuestionsMap(); // Get the Map
+  const loadedQuestions: Question[] = [];
+
+  quiz.questionIds.forEach(qId => {
+    const question = questionsMap.get(qId);
+    if (question) {
+      loadedQuestions.push(question);
+    } else {
+      // console.warn(`Question ID ${qId} from custom quiz ${quizId} not found in cache.`); // Removed log
+    }
+  });
+
+  // console.log(`Found ${loadedQuestions.length} questions for custom quiz ${quizId}.`); // Removed log
+  return loadedQuestions; // Return the array of found questions
 };
 
 export const deleteCustomQuiz = (id: string): void => {

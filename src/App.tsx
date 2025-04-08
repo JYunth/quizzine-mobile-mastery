@@ -36,9 +36,10 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/quiz/:mode" element={<Quiz />} />
-            <Route path="/quiz/:mode/:week" element={<Quiz />} />
-            <Route path="/quiz/:mode/:id" element={<Quiz />} />
+            {/* Reordered routes: More specific ones first */}
+            <Route path="/quiz/:mode/:id" element={<Quiz />} /> {/* Matches /quiz/custom/abc */}
+            <Route path="/quiz/:mode/:week" element={<Quiz />} /> {/* Matches /quiz/weekly/1 */}
+            <Route path="/quiz/:mode" element={<Quiz />} /> {/* Matches /quiz/full */}
             <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
