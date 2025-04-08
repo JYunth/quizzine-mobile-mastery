@@ -15,16 +15,29 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'prompt',
       manifest: {
-        name: 'Quizzine Mobile Mastery',
+        name: 'Quizzine',
         short_name: 'Quizzine',
         description: 'A mobile quiz application',
         icons: [
           {
             src: '/favicon.ico', // Using existing favicon as placeholder
             sizes: '64x64 32x32 24x24 16x16', // Common favicon sizes
-            type: 'image/x-icon'
+            type: 'image/x-icon',
+            purpose: 'any' // Add purpose
           },
-          // TODO: Add proper 192x192 and 512x512 icons later
+          // Placeholder entries for required sizes - REPLACE with actual images later!
+          {
+            src: '/android-chrome-192x192.png', // Updated path to actual icon
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/android-chrome-512x512.png', // Updated path to actual icon
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
+          }
         ],
         start_url: '/',
         display: 'standalone',
