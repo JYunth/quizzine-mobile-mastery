@@ -187,6 +187,11 @@ export function ConfettiSideCannons({ duration = 1000 }: ConfettiSideCannonsProp
       requestAnimationFrame(frame);
     };
 
+    // Trigger vibration if supported
+    if (navigator.vibrate) {
+      navigator.vibrate(300); // Vibrate for 200ms
+    }
+
     frame(); // Start the animation
 
     // No cleanup needed as requestAnimationFrame stops itself
