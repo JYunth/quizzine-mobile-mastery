@@ -76,9 +76,16 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
             break;
         }
         
-        // console.log("useQuizState: Shuffling questions..."); // Removed log
-        const shuffled = shuffleArray(loadedQuestions);
-        setQuestions(shuffled);
+        // Check settings to decide whether to shuffle question order
+        const { settings } = getStorage();
+        if (settings.hardMode) {
+          // console.log("useQuizState: Hard mode ON - Shuffling question order."); // Optional log
+          const shuffled = shuffleArray(loadedQuestions);
+          setQuestions(shuffled);
+        } else {
+          // console.log("useQuizState: Hard mode OFF - Using original question order."); // Optional log
+          setQuestions(loadedQuestions); // Use original order if hard mode is off
+        }
         
         // console.log("useQuizState: Setting loading to false."); // Removed log
         setLoading(false);
