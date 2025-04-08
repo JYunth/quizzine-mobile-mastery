@@ -10,7 +10,9 @@ import {
   getCurrentCourseId,
   getQuestionsForCustomQuiz,
   shuffleArray,
-  isBookmarked
+  isBookmarked,
+  // getStorage, // Import getStorage <-- Removed duplicate
+  saveConfidenceRating // Import saveConfidenceRating
 } from "@/lib/storage";
 
 interface UseQuizStateProps {
@@ -138,6 +140,21 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
       selectedOptionText: selectedText, // Store the selected text
       correct: correct,
     };
+
+    // --- Confidence Rating Calculation ---
+    const storage = getStorage();
+    const currentRating = storage.confidenceRatings[displayQuestion.id] ?? 3; // Default to 3 if undefined
+    let newRating = currentRating;
+
+    if (correct) {
+      newRating = Math.min(currentRating + 1, 5); // Increase, max 5
+    } else {
+      newRating = Math.max(currentRating - 1, 0); // Decrease, min 0
+    }
+
+    // Save the updated rating (no need to await, it's synchronous localStorage)
+    saveConfidenceRating(displayQuestion.id, newRating);
+    // --- End Confidence Rating Calculation ---
 
     setAnswers([...answers, finalAnswer]); // Add the processed answer
     
