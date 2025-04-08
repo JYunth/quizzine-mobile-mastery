@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Check, X, ArrowLeft, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { ConfettiSideCannons } from "@/components/Confetti"; // Import the confetti component
 interface QuizResultsProps {
   questions: Question[];
   answers: Answer[];
@@ -54,6 +54,9 @@ const QuizResults = ({ questions, answers, onRetryIncorrect, onReviewQuiz }: Qui
   
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Conditionally render confetti for 100% score */}
+      {percentage === 100 && <ConfettiSideCannons duration={1000} />}
+      
       {/* New Header Section */}
       <div className="flex items-center justify-between mb-4">
         {/* Left-aligned Icon Button */}
