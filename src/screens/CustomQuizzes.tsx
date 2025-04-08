@@ -1,19 +1,21 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import PageLayout from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { getCustomQuizzes, deleteCustomQuiz } from "@/lib/storage";
 import { CustomQuiz } from "@/types";
 import { Plus } from "lucide-react";
-import CustomQuizDrawer from "@/components/CustomQuizDrawer";
+// Remove CustomQuizDrawer import
 import CustomQuizItem from "@/components/CustomQuizItem";
 import { toast } from "sonner";
 import QuizEmpty from "@/components/QuizEmpty";
 import QuizLoading from "@/components/QuizLoading";
 
 const CustomQuizzes = () => {
+  const navigate = useNavigate(); // Get navigate function
   const [quizzes, setQuizzes] = useState<CustomQuiz[]>([]);
-  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  // Remove createDrawerOpen state
   const [loading, setLoading] = useState(true);
 
   const loadQuizzes = () => {
@@ -52,7 +54,8 @@ const CustomQuizzes = () => {
       <div className="max-w-4xl mx-auto pb-16">
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-xl font-semibold">Your Custom Quizzes</h2>
-          <Button onClick={() => setCreateDrawerOpen(true)}>
+          {/* Update button onClick to navigate */}
+          <Button onClick={() => navigate('/create-quiz')}> 
             <Plus className="mr-2 h-4 w-4" />
             Create Quiz
           </Button>
@@ -72,11 +75,7 @@ const CustomQuizzes = () => {
           </div>
         )}
 
-        <CustomQuizDrawer 
-          open={createDrawerOpen} 
-          onOpenChange={setCreateDrawerOpen} 
-          onQuizCreated={loadQuizzes}
-        />
+        {/* Remove CustomQuizDrawer usage */}
       </div>
     </PageLayout>
   );
