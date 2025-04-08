@@ -121,7 +121,7 @@
           "tags": []
         },
         {
-          "id": "env101-w2q1",
+          "id": "forests101-w2q1",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
@@ -131,7 +131,7 @@
           "tags": []
         },
         {
-          "id": "env101-w2q2",
+          "id": "forests101-w2q2",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
@@ -146,7 +146,7 @@
           "tags": []
         },
         {
-          "id": "env101-w2q3",
+          "id": "forests101-w2q3",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
@@ -161,7 +161,7 @@
           "tags": []
         },
         {
-          "id": "env101-w2q4",
+          "id": "forests101-w2q4",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
@@ -171,17 +171,17 @@
           "tags": []
         },
         {
-          "id": "env101-w2q5",
+          "id": "forests101-w2q5",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
           "question": "A climax caused by wildfires is an example of",
           "options": ["climatic climax", "edaphic climax", "disclimax", "catastrophic climax"],
-          "correctIndex": 2,
+          "correctIndex": 3,
           "tags": []
         },
         {
-          "id": "env101-w2q6",
+          "id": "forests101-w2q6",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
@@ -191,7 +191,7 @@
           "tags": []
         },
         {
-          "id": "env101-w2q7",
+          "id": "forests101-w2q7",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
@@ -201,7 +201,7 @@
           "tags": []
         },
         {
-          "id": "env101-w2q8",
+          "id": "forests101-w2q8",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
@@ -211,7 +211,7 @@
           "tags": []
         },
         {
-          "id": "env101-w2q9",
+          "id": "forests101-w2q9",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
@@ -226,7 +226,7 @@
           "tags": []
         },
         {
-          "id": "env101-w2q10",
+          "id": "forests101-w2q10",
           "courseId": "forests101",
           "week": 2,
           "weekTitle": "Basics of Silviculture",
@@ -340,9 +340,9 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "The science that deals with the development and care of forests is called",
-          "options": ["Forestry", "Agroforestry", "Silviculture", "Horticulture"],
-          "correctIndex": 2,
+          "question": "For absolute form factor, the reference for the base of the cylinder is",
+          "options": ["base of the tree", "breast height", "10% of tree height", "20% of tree height"],
+          "correctIndex": 0,
           "tags": []
         },
         {
@@ -350,9 +350,9 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "Which of the following is a silvicultural system?",
-          "options": ["Clear felling", "Selective felling", "Shelterwood", "All of the above"],
-          "correctIndex": 3,
+          "question": "For normal form factor, the reference for the base of the cylinder is",
+          "options": ["base of the tree", "breast height", "10% of tree height", "20% of tree height"],
+          "correctIndex": 2,
           "tags": []
         },
         {
@@ -360,9 +360,9 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "Which system is used for shade-bearing species?",
-          "options": ["Clear felling", "Shelterwood", "Selection", "All of the above"],
-          "correctIndex": 1,
+          "question": "In India, the breast height is considered to be",
+          "options": ["1.37 m", "1.47 m", "1.57 m", "2.47 m"],
+          "correctIndex": 0,
           "tags": []
         },
         {
@@ -370,9 +370,9 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "What is the term used for the area occupied by a tree’s crown?",
-          "options": ["Basal area", "Crown cover", "Crown area", "Canopy closure"],
-          "correctIndex": 2,
+          "question": "Measurement of height based on similar triangles comes under:",
+          "options": ["similar measurement", "dissimilar measurement", "direct measurement", "indirect measurement"],
+          "correctIndex": 3,
           "tags": []
         },
         {
@@ -380,9 +380,9 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "In which method is regeneration obtained from coppice shoots?",
-          "options": ["Artificial regeneration", "Natural regeneration", "Coppice method", "Seedling method"],
-          "correctIndex": 2,
+          "question": "For a tree with dbh = 45.6 cm, height = 27 m and total stem volume of 1.78 cum, the artificial form factor for the tree is:",
+          "options": ["0.1", "0.2", "0.3", "0.4"],
+          "correctIndex": 3,
           "tags": []
         },
         {
@@ -390,9 +390,9 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "Which is a high forest silvicultural system?",
-          "options": ["Clear felling system", "Coppice system", "Taungya system", "None of these"],
-          "correctIndex": 0,
+          "question": "Consider a stand of eucalyptus trees that are on average 30 cm in diameter and spaced on a regular 3 m grid. Find the spacing factor.",
+          "options": ["5", "10", "15", "data insufficient"],
+          "correctIndex": 1,
           "tags": []
         },
         {
@@ -400,9 +400,9 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "The shelterwood system is suitable for",
-          "options": ["Light demanding species", "Shade-bearing species", "Fast growing species", "None of the above"],
-          "correctIndex": 1,
+          "question": "Diameter over bark (dob), diameter under bark (dub) and bark thickness (tb) are related as:",
+          "options": ["dob = dub + tb", "dob = dub - tb", "dob=dub+2×tb", "dob = dub - 2 × tb"],
+          "correctIndex": 2,
           "tags": []
         },
         {
@@ -410,9 +410,9 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "Which regeneration method is used in the selection system?",
-          "options": ["Seedling regeneration", "Coppice regeneration", "Root suckers", "Artificial regeneration"],
-          "correctIndex": 0,
+          "question": "For false form factor, the reference for the base of the cylinder is",
+          "options": ["base of the tree", "breast height", "10% of tree height", "20% of tree height"],
+          "correctIndex": 1,
           "tags": []
         },
         {
@@ -420,8 +420,8 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "Which species regenerates best through coppicing?",
-          "options": ["Eucalyptus", "Teak", "Pine", "Deodar"],
+          "question": "Choose the correct statement:",
+          "options": ["For a non-circular cross-section, girth tape over-estimates the sectional area.", "For a non-circular cross-section, girth tape under-estimates the sectional area.", "For a non-circular cross-section, girth tape correctly estimates the sectional area.", "None of these is a correct statement."],
           "correctIndex": 0,
           "tags": []
         },
@@ -430,9 +430,9 @@
           "courseId": "forests101",
           "week": 4,
           "weekTitle": "Forest Mensuration",
-          "question": "Which factor affects natural regeneration the most?",
-          "options": ["Seed dispersal", "Light", "Soil", "All of the above"],
-          "correctIndex": 3,
+          "question": "A tree has dbh of 25 cm. Find its basal area in sq m.",
+          "options": [".049", ".096", ".149", ".195"],
+          "correctIndex": 0,
           "tags": []
         },
         {
@@ -482,7 +482,7 @@
           "weekTitle": "Forest Surveying",
           "question": "The time of flight for LiDAR is 0.00001 sec. Find the distance of the object from the instrument.",
           "options": ["500 m", "1000 m", "1500 m", "2000 m"],
-          "correctIndex": 1,
+          "correctIndex": 2,
           "tags": []
         },
         {
@@ -505,9 +505,9 @@
           "courseId": "forests101",
           "week": 5,
           "weekTitle": "Forest Surveying",
-          "question": "___ is how close the measured values are to each other.",
-          "options": ["Accuracy", "Precision", "Bias", "Variance"],
-          "correctIndex": 1,
+          "question": "A sampling procedure such that each possible combination of sampling units out of the population has the same chance of being selected is referred to as",
+          "options": ["Simple random sampling", "Systematic sampling", "Stratified sampling", "Multistage sampling"],
+          "correctIndex": 0,
           "tags": []
         },
         {
@@ -515,9 +515,9 @@
           "courseId": "forests101",
           "week": 5,
           "weekTitle": "Forest Surveying",
-          "question": "Which of these is not a part of LiDAR?",
-          "options": ["Laser", "Scanner", "GPS", "IMU"],
-          "correctIndex": 3,
+          "question": "The frequency of flyovers is an indicator of",
+          "options": ["spatial resolution", "temporal resolution", "spectral resolution", "radiometric resolution"],
+          "correctIndex": 1,
           "tags": []
         },
         {
@@ -525,9 +525,9 @@
           "courseId": "forests101",
           "week": 5,
           "weekTitle": "Forest Surveying",
-          "question": "Which of these is not a type of sampling?",
-          "options": ["Simple random sampling", "Systematic sampling", "Stratified sampling", "Multistage sampling"],
-          "correctIndex": 3,
+          "question": "___ is how close the measured values are to each other.",
+          "options": ["Accuracy", "Precision", "Bias", "Variance"],
+          "correctIndex": 1,
           "tags": []
         },
         {
@@ -535,8 +535,8 @@
           "courseId": "forests101",
           "week": 5,
           "weekTitle": "Forest Surveying",
-          "question": "Which of these is not a type of error?",
-          "options": ["Systematic error", "Random error", "Blunder", "Gross error"],
+          "question": "Bathymetric LiDAR uses",
+          "options": ["far infrared light", "near infrared light", "orange light", "green light"],
           "correctIndex": 3,
           "tags": []
         },
@@ -707,7 +707,7 @@
             "artificial regeneration by direct sowing",
             "artificial regeneration by planting seedlings"
           ],
-          "correctIndex": 3,
+          "correctIndex": 1,
           "tags": []
         },
         {
@@ -752,7 +752,7 @@
             "artificial regeneration by planting seedlings",
             "artificial regeneration by transplanting trees"
           ],
-          "correctIndex": 3,
+          "correctIndex": 0,
           "tags": []
         },
         {
@@ -902,7 +902,7 @@
           "weekTitle": "Logging and Yield",
           "question": "Trees to be retained are shown in ___ marking colour",
           "options": ["yellow", "blue", "red", "white"],
-          "correctIndex": 2,
+          "correctIndex": 1,
           "tags": []
         },
         {
@@ -912,7 +912,7 @@
           "weekTitle": "Logging and Yield",
           "question": "Trees on boundary are shown in ___ marking colour",
           "options": ["yellow", "blue", "red", "white"],
-          "correctIndex": 3,
+          "correctIndex": 2,
           "tags": []
         },
         {
@@ -942,7 +942,7 @@
           "weekTitle": "Logging and Yield",
           "question": "Net growth in initial volume is given by",
           "options": ["V2-V1", "V2-V1+H-I", "V2-V1+H-I+M", "V2-V1+H-I-M"],
-          "correctIndex": 3,
+          "correctIndex": 1,
           "tags": []
         },
         {
@@ -952,7 +952,7 @@
           "weekTitle": "Logging and Yield",
           "question": "Research plots are shown in ___ marking colour",
           "options": ["yellow", "blue", "red", "white"],
-          "correctIndex": 0,
+          "correctIndex": 3,
           "tags": []
         },
         {
@@ -962,7 +962,7 @@
           "weekTitle": "Logging and Yield",
           "question": "Which of these gives the greatest accuracy in constructing face cuts",
           "options": ["conventional face", "humboldt face", "open face", "all of these"],
-          "correctIndex": 2,
+          "correctIndex": 0,
           "tags": []
         },
         {
@@ -1081,7 +1081,7 @@
           "week": 10,
           "weekTitle": "Silvicultural Practices",
           "question": "Choice of spacing is dependent upon",
-          "options": ["objective of plantation", "site-species matching", "growth rate", "allofthese"],
+          "options": ["objective of plantation", "site-species matching", "growth rate", "all of these"],
           "correctIndex": 3,
           "tags": []
         },
