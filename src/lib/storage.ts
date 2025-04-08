@@ -222,6 +222,19 @@ export const saveCustomQuiz = (quiz: CustomQuiz): void => {
   saveStorage(storage);
 };
 
+// Update an existing custom quiz
+export const updateCustomQuiz = (updatedQuiz: CustomQuiz): void => {
+  const storage = getStorage();
+  const index = storage.customQuizzes.findIndex(quiz => quiz.id === updatedQuiz.id);
+  if (index !== -1) {
+    storage.customQuizzes[index] = updatedQuiz;
+    saveStorage(storage);
+  } else {
+    console.error(`Quiz with id ${updatedQuiz.id} not found for update.`);
+    // Optionally throw an error or handle it differently
+  }
+};
+
 export const getCustomQuizzes = (): CustomQuiz[] => {
   const storage = getStorage();
   return storage.customQuizzes;

@@ -43,7 +43,8 @@ const App = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/custom-quizzes" element={<CustomQuizzes />} />
-            <Route path="/create-quiz" element={<CreateQuiz />} /> {/* Add the new route */}
+            <Route path="/create-quiz" element={<CreateQuiz />} /> 
+            <Route path="/edit-quiz/:quizId" element={<CreateQuiz />} /> {/* Add the edit route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,58 +1,87 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom"; // Import useParams
 import PageLayout from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CustomQuiz, Question } from "@/types";
-// Import getAllQuestions instead of getAllQuestionsFromAllCourses
-import { getAllQuestions, saveCustomQuiz } from "@/lib/storage"; 
+// Import necessary storage functions
+import { 
+  getAllQuestions, 
+  saveCustomQuiz, 
+  getCustomQuizById, 
+  updateCustomQuiz 
+} from "@/lib/storage"; 
 import { X, Filter, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 const CreateQuiz = () => {
   const navigate = useNavigate();
+  const { quizId } = useParams<{ quizId?: string }>(); // Get quizId from URL params
+  const isEditMode = Boolean(quizId); // Determine if in edit mode
+
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [quizName, setQuizName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false); // Track initial data load
   const [filterWeek, setFilterWeek] = useState<number | null>(1); // Default filterWeek to 1
-  // Remove filterCourse state
   const [showFilters, setShowFilters] = useState(false);
 
-  // Load questions for the current course
+  // Load questions and potentially existing quiz data
   useEffect(() => {
-    const loadQuestions = async () => {
+    const loadData = async () => {
       setLoading(true);
+      setInitialLoadComplete(false); // Reset load completion flag
       try {
-        // Call getAllQuestions() to get questions for the current course
-        const courseQuestions = await getAllQuestions(); 
+        // Always load available questions for the current course
+        const courseQuestions = await getAllQuestions();
         setQuestions(courseQuestions);
-        setFilteredQuestions(courseQuestions); // Initially set filtered to all course questions
+        setFilteredQuestions(courseQuestions); // Apply default filter later
+
+        // If in edit mode, load the existing quiz data
+        if (isEditMode && quizId) {
+          const existingQuiz = getCustomQuizById(quizId);
+          if (existingQuiz) {
+            setQuizName(existingQuiz.name);
+            setSelectedQuestions(existingQuiz.questionIds);
+            // Optionally set filterWeek based on loaded questions if needed, but default is 1
+          } else {
+            toast.error("Quiz not found. Redirecting...");
+            navigate('/custom-quizzes');
+            return; // Stop further processing if quiz not found
+          }
+        } else {
+          // Reset form for create mode
+          setQuizName("");
+          setSelectedQuestions([]);
+          setFilterWeek(1); // Ensure default week filter for create mode
+        }
+        
       } catch (error) {
-        console.error("Failed to load questions:", error);
-        toast("Failed to load questions. Please try again.");
+        console.error("Failed to load data:", error);
+        toast.error("Failed to load necessary data. Please try again.");
       } finally {
         setLoading(false);
+        setInitialLoadComplete(true); // Mark initial load as complete
       }
     };
-    
-    loadQuestions();
-  }, []);
 
-  // Apply filters
+    loadData();
+  }, [quizId, isEditMode, navigate]); // Rerun if quizId changes
+
+  // Apply week filter (only after initial data load is complete)
   useEffect(() => {
+    if (!initialLoadComplete) return; // Don't filter until initial data is ready
+
     let filtered = [...questions];
-    
     if (filterWeek !== null) {
       filtered = filtered.filter(q => q.week === filterWeek);
     }
-    // Remove filterCourse logic
-    
     setFilteredQuestions(filtered);
-  }, [filterWeek, questions]); // Remove filterCourse from dependencies
+  }, [filterWeek, questions, initialLoadComplete]);
 
   // Get unique weeks for filtering
   const weeks = [...new Set(questions.map(q => q.week))].sort((a, b) => a - b);
@@ -70,31 +99,49 @@ const CreateQuiz = () => {
     });
   };
 
-  const handleCreateQuiz = () => {
-    if (!quizName.trim()) {
-      toast("Please enter a quiz name");
+  // Renamed handler to be more generic
+  const handleSubmit = () => { 
+    const trimmedName = quizName.trim();
+    if (!trimmedName) {
+      toast.error("Please enter a quiz name");
       return;
     }
     
     if (selectedQuestions.length === 0) {
-      toast("Please select at least one question");
+      toast.error("Please select at least one question");
       return;
     }
+
+    if (isEditMode && quizId) {
+      // Update existing quiz
+      const updatedQuizData: CustomQuiz = {
+        id: quizId, // Use existing ID
+        name: trimmedName,
+        timestamp: new Date().toISOString(), // Update timestamp
+        questionIds: selectedQuestions,
+      };
+      updateCustomQuiz(updatedQuizData);
+      toast.success("Custom quiz updated successfully");
+    } else {
+      // Create new quiz
+      const newQuiz: CustomQuiz = {
+        id: Date.now().toString(), // Generate new ID
+        name: trimmedName,
+        timestamp: new Date().toISOString(),
+        questionIds: selectedQuestions,
+      };
+      saveCustomQuiz(newQuiz);
+      toast.success("Custom quiz created successfully");
+    }
     
-    const newQuiz: CustomQuiz = {
-      id: Date.now().toString(),
-      name: quizName.trim(),
-      timestamp: new Date().toISOString(),
-      questionIds: selectedQuestions,
-    };
-    
-    saveCustomQuiz(newQuiz);
-    toast("Custom quiz created successfully");
-    navigate('/custom-quizzes'); // Navigate back after creation
+    navigate('/custom-quizzes'); // Navigate back after creation/update
   };
 
+  // Dynamic page title
+  const pageTitle = isEditMode ? "Edit Custom Quiz" : "Create Custom Quiz";
+
   return (
-    <PageLayout title="Create Custom Quiz">
+    <PageLayout title={pageTitle}>
       <div className="max-w-4xl mx-auto pb-16">
         <Button 
           variant="ghost" 
@@ -246,14 +293,14 @@ const CreateQuiz = () => {
             )}
           </div>
           
-          {/* Create Button */}
+          {/* Submit Button (Text changes based on mode) */}
           <div className="flex justify-end pt-6 border-t">
             <Button 
-              onClick={handleCreateQuiz} 
+              onClick={handleSubmit} // Use the updated handler
               disabled={selectedQuestions.length === 0 || !quizName.trim() || loading}
               size="lg"
             >
-              Create Quiz ({selectedQuestions.length} questions)
+              {isEditMode ? "Update Quiz" : "Create Quiz"} ({selectedQuestions.length} questions)
             </Button>
           </div>
         </div>
