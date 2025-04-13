@@ -191,9 +191,9 @@ export const CreateQuiz = (): JSX.Element => {
             <span className="text-sm font-medium">
               Selected: {selectedQuestions.length} questions
             </span>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              size="sm"
+              className="bg-yellow-400 text-gray-900 hover:bg-yellow-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-yellow-400"
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="h-4 w-4 mr-2" />
