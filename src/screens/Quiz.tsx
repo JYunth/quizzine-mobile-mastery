@@ -44,7 +44,8 @@ export const Quiz = (): JSX.Element => {
     handleRetryIncorrect,
     handleReviewQuiz,
     handleBackToResults,
-    navigateReview
+    navigateReview,
+    goToPreviousQuestion // Destructure the new function
   } = useQuizState({ mode, week, id });
   
   if (loading) {
@@ -106,6 +107,9 @@ export const Quiz = (): JSX.Element => {
         onAnswer={handleAnswer}
         onBackToResults={handleBackToResults}
         onNavigateReview={navigateReview}
+        onGoToPrevious={goToPreviousQuestion} // Pass the function down
+        answers={answers} // Pass the full answers array
+        // currentQuestionIndex is already passed
       />
     </PageLayout>
   );
