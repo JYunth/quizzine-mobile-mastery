@@ -26,10 +26,10 @@ export const BottomNavigation = (): JSX.Element => {
           active={isActive("/bookmarks")} 
         />
         <NavItem 
-          to="/dashboard" 
-          icon={<BarChart className={isActive("/dashboard") ? "text-primary" : "text-muted-foreground"} size={24} />} 
+          to="/stats"
+          icon={<BarChart className={isActive("/stats") ? "text-primary" : "text-muted-foreground"} size={24} />}
           label="Stats" 
-          active={isActive("/dashboard")} 
+          active={isActive("/stats")}
         />
         <NavItem 
           to="/settings" 

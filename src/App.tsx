@@ -10,7 +10,7 @@ import { useStreak } from "./hooks/useStreak"; // Import the streak hook
 import { Home } from "./screens/Home";
 import { Quiz } from "./screens/Quiz";
 import { Bookmarks } from "./screens/Bookmarks";
-import { Dashboard } from "./screens/Dashboard";
+import { Stats } from "./screens/Stats";
 import { Settings } from "./screens/Settings";
 import { CustomQuizzes } from "./screens/CustomQuizzes";
 import { CreateQuiz } from "./pages/CreateQuiz"; // Import the new page
@@ -40,7 +40,7 @@ export const App = (): JSX.Element => {
              {/* General route for modes without week/id (full, smart) */}
             <Route path="/quiz/:mode" element={<Quiz />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/stats" element={<Stats />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/custom-quizzes" element={<CustomQuizzes />} />
             <Route path="/create-quiz" element={<CreateQuiz />} /> 

@@ -46,8 +46,8 @@ export const DesktopSidebar = (): JSX.Element => {
           </SidebarMenuItem>
           
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard")}>
-              <Link to="/dashboard">
+            <SidebarMenuButton asChild isActive={isActive("/stats")}>
+              <Link to="/stats">
                 <BarChart size={20} />
                 <span>Stats</span>
               </Link>
