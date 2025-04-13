@@ -2,11 +2,11 @@
 import { Home, BookMarked, BarChart, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
-const BottomNavigation = () => {
+export const BottomNavigation = (): JSX.Element => {
   const location = useLocation();
   const currentPath = location.pathname;
   
-  const isActive = (path: string) => {
+  const isActive = (path: string): boolean => {
     return currentPath === path;
   };
   
@@ -49,7 +49,7 @@ interface NavItemProps {
   active: boolean;
 }
 
-const NavItem = ({ to, icon, label, active }: NavItemProps) => (
+const NavItem = ({ to, icon, label, active }: NavItemProps): JSX.Element => (
   <Link 
     to={to} 
     className={`flex flex-col items-center justify-center ${active ? "text-primary" : "text-muted-foreground"}`}
@@ -59,4 +59,4 @@ const NavItem = ({ to, icon, label, active }: NavItemProps) => (
   </Link>
 );
 
-export default BottomNavigation;
+// No default export needed, using named export above

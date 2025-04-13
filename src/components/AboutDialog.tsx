@@ -16,7 +16,7 @@ interface AboutDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
+export const AboutDialog = ({ open, onOpenChange }: AboutDialogProps): JSX.Element => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -61,4 +61,4 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
   );
 };
 
-export default AboutDialog;
+// No default export needed, using named export above

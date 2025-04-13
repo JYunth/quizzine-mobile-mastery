@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react"; // Added useMemo
-import PageLayout from "@/components/PageLayout";
+import { PageLayout } from "@/components/PageLayout";
 import { getBookmarkedQuestions, isBookmarked, toggleBookmark } from "@/lib/storage";
 import { Question } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
-const Bookmarks = () => {
+export const Bookmarks = (): JSX.Element => {
   const [bookmarks, setBookmarks] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -172,4 +172,4 @@ const Bookmarks = () => {
   );
 };
 
-export default Bookmarks;
+// No default export needed, using named export above

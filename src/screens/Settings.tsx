@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import PageLayout from "@/components/PageLayout";
+import { PageLayout } from "@/components/PageLayout";
 import { getStorage, updateSettings, exportStorage, importStorage, resetStorage } from "@/lib/storage";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -21,9 +21,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DownloadCloud, UploadCloud, RotateCcw, Info } from "lucide-react";
-import AboutModal from "@/components/AboutModal";
+import { AboutModal } from "@/components/AboutModal";
 
-const Settings = () => {
+export const Settings = (): JSX.Element => {
   const [settings, setSettings] = useState<AppStorage["settings"]>({
     darkMode: false,
     reminders: false,
@@ -37,7 +37,7 @@ const Settings = () => {
     setSettings(storage.settings);
   }, []);
   
-  const handleToggleDarkMode = (checked: boolean) => {
+  const handleToggleDarkMode = (checked: boolean): void => {
     updateSettings({ darkMode: checked });
     setSettings({ ...settings, darkMode: checked });
     
@@ -50,22 +50,22 @@ const Settings = () => {
     }
   };
   
-  const handleToggleHardMode = (checked: boolean) => {
+  const handleToggleHardMode = (checked: boolean): void => {
     updateSettings({ hardMode: checked });
     setSettings({ ...settings, hardMode: checked });
     toast(`Hard mode ${checked ? 'enabled' : 'disabled'}`);
   };
   
-  const handleExport = () => {
+  const handleExport = (): void => {
     exportStorage();
     toast("Data exported successfully");
   };
   
-  const handleImportClick = () => {
+  const handleImportClick = (): void => {
     fileInput?.click();
   };
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -100,7 +100,7 @@ const Settings = () => {
     e.target.value = '';
   };
   
-  const handleReset = () => {
+  const handleReset = (): void => {
     resetStorage();
     // Reload settings after reset
     const storage = getStorage();
@@ -235,4 +235,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+// No default export needed, using named export above

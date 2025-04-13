@@ -14,7 +14,7 @@ interface QuizResultsProps {
   onReviewQuiz?: () => void;
 }
 
-const QuizResults = ({ questions, answers, onRetryIncorrect, onReviewQuiz }: QuizResultsProps) => {
+export const QuizResults = ({ questions, answers, onRetryIncorrect, onReviewQuiz }: QuizResultsProps): JSX.Element => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("summary");
   
@@ -29,7 +29,7 @@ const QuizResults = ({ questions, answers, onRetryIncorrect, onReviewQuiz }: Qui
     1000
   );
   
-  const getGradeText = () => {
+  const getGradeText = (): string => {
     if (percentage >= 90) return "Excellent!";
     if (percentage >= 80) return "Great job!";
     if (percentage >= 70) return "Good work!";
@@ -37,17 +37,17 @@ const QuizResults = ({ questions, answers, onRetryIncorrect, onReviewQuiz }: Qui
     return "Keep practicing!";
   };
   
-  const getQuestionText = (questionId: string) => {
+  const getQuestionText = (questionId: string): string => {
     const question = questions.find(q => q.id === questionId);
     return question ? question.question : "";
   };
   
-  const getCorrectAnswer = (questionId: string) => {
+  const getCorrectAnswer = (questionId: string): string => {
     const question = questions.find(q => q.id === questionId);
     return question ? question.options[question.correctIndex] : "";
   };
   
-  const getUserAnswer = (answer: Answer) => {
+  const getUserAnswer = (answer: Answer): string => {
     // Directly return the stored text of the user's selected option
     return answer.selectedOptionText || ""; // Fallback to empty string if somehow missing
   };
@@ -191,4 +191,4 @@ const QuizResults = ({ questions, answers, onRetryIncorrect, onReviewQuiz }: Qui
   );
 };
 
-export default QuizResults;
+// No default export needed, using named export above

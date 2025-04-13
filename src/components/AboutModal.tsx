@@ -15,7 +15,7 @@ interface AboutModalProps {
   trigger: React.ReactNode;
 }
 
-const AboutModal = ({ trigger }: AboutModalProps) => {
+export const AboutModal = ({ trigger }: AboutModalProps): JSX.Element => {
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -63,4 +63,4 @@ const AboutModal = ({ trigger }: AboutModalProps) => {
   );
 };
 
-export default AboutModal;
+// No default export needed, using named export above

@@ -1,24 +1,24 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
-import PageLayout from "@/components/PageLayout";
+import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { getCustomQuizzes, deleteCustomQuiz } from "@/lib/storage";
 import { CustomQuiz } from "@/types";
 import { Plus } from "lucide-react";
 // Remove CustomQuizDrawer import
-import CustomQuizItem from "@/components/CustomQuizItem";
+import { CustomQuizItem } from "@/components/CustomQuizItem";
 import { toast } from "sonner";
-import QuizEmpty from "@/components/QuizEmpty";
-import QuizLoading from "@/components/QuizLoading";
+import { QuizEmpty } from "@/components/QuizEmpty";
+import { QuizLoading } from "@/components/QuizLoading";
 
-const CustomQuizzes = () => {
+export const CustomQuizzes = (): JSX.Element => {
   const navigate = useNavigate(); // Get navigate function
   const [quizzes, setQuizzes] = useState<CustomQuiz[]>([]);
   // Remove createDrawerOpen state
   const [loading, setLoading] = useState(true);
 
-  const loadQuizzes = () => {
+  const loadQuizzes = (): void => {
     setLoading(true);
     try {
       const customQuizzes = getCustomQuizzes();
@@ -35,7 +35,7 @@ const CustomQuizzes = () => {
     loadQuizzes();
   }, []);
 
-  const handleDeleteQuiz = (id: string) => {
+  const handleDeleteQuiz = (id: string): void => {
     deleteCustomQuiz(id);
     setQuizzes(quizzes.filter(quiz => quiz.id !== id));
     toast("Custom quiz deleted");
@@ -81,4 +81,4 @@ const CustomQuizzes = () => {
   );
 };
 
-export default CustomQuizzes;
+// No default export needed, using named export above

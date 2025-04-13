@@ -1,8 +1,8 @@
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReactNode } from "react";
-import BottomNavigation from "./BottomNavigation";
-import DesktopSidebar from "./DesktopSidebar";
+import { BottomNavigation } from "./BottomNavigation";
+import { DesktopSidebar } from "./DesktopSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 interface PageLayoutProps {
@@ -11,7 +11,7 @@ interface PageLayoutProps {
   hideNav?: boolean;
 }
 
-const PageLayout = ({ children, title, hideNav = false }: PageLayoutProps) => {
+export const PageLayout = ({ children, title, hideNav = false }: PageLayoutProps): JSX.Element => {
   const isMobile = useIsMobile();
   
   return (
@@ -37,4 +37,4 @@ const PageLayout = ({ children, title, hideNav = false }: PageLayoutProps) => {
   );
 };
 
-export default PageLayout;
+// No default export needed, using named export above

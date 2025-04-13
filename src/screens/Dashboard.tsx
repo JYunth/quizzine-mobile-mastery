@@ -1,13 +1,13 @@
 
 import { useEffect, useState } from "react";
-import PageLayout from "@/components/PageLayout";
+import { PageLayout } from "@/components/PageLayout";
 import { getStorage } from "@/lib/storage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppStorage, QuizAttempt } from "@/types";
 import { Badge } from "@/components/ui/badge";
 
-const Dashboard = () => {
+export const Dashboard = (): JSX.Element => {
   const [storage, setStorage] = useState<AppStorage | null>(null);
   
   useEffect(() => {
@@ -137,7 +137,7 @@ const Dashboard = () => {
   );
 };
 
-const StatCard = ({ title, value, highlight = false }: { title: string; value: string; highlight?: boolean }) => (
+const StatCard = ({ title, value, highlight = false }: { title: string; value: string; highlight?: boolean }): JSX.Element => (
   <Card>
     <CardContent className="p-4 text-center">
       <h3 className="text-sm text-muted-foreground mb-1">{title}</h3>
@@ -147,7 +147,7 @@ const StatCard = ({ title, value, highlight = false }: { title: string; value: s
 );
 
 // Helper functions to prepare data
-function prepareWeeklyScores(attempts: QuizAttempt[]) {
+function prepareWeeklyScores(attempts: QuizAttempt[]): { name: string; score: number; }[] {
   const weekMap = new Map<number, { total: number; correct: number }>();
   
   attempts.forEach(attempt => {
@@ -170,7 +170,7 @@ function prepareWeeklyScores(attempts: QuizAttempt[]) {
     .sort((a, b) => parseInt(a.name.split(' ')[1]) - parseInt(b.name.split(' ')[1]));
 }
 
-function prepareTagPerformance(storage: AppStorage) {
+function prepareTagPerformance(storage: AppStorage): { tag: string; correct: number; total: number; percentage: number; }[] {
   // This would require accessing the questions to get tag data
   // For now, returning a stub
   return [
@@ -181,13 +181,13 @@ function prepareTagPerformance(storage: AppStorage) {
   ];
 }
 
-function prepareQuizHistory(attempts: QuizAttempt[]) {
+function prepareQuizHistory(attempts: QuizAttempt[]): QuizAttempt[] {
   return [...attempts]
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, 5);
 }
 
-function calculateAverageScore(attempts: QuizAttempt[]) {
+function calculateAverageScore(attempts: QuizAttempt[]): number {
   if (attempts.length === 0) return 0;
   
   const totalCorrect = attempts.reduce((sum, a) => sum + a.score, 0);
@@ -196,7 +196,7 @@ function calculateAverageScore(attempts: QuizAttempt[]) {
   return totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 }
 
-function getQuizTitle(quiz: QuizAttempt) {
+function getQuizTitle(quiz: QuizAttempt): string {
   switch(quiz.mode) {
     case 'weekly':
       return `Week ${quiz.week} Quiz`;
@@ -213,4 +213,4 @@ function getQuizTitle(quiz: QuizAttempt) {
   }
 }
 
-export default Dashboard;
+// No default export needed, using named export above

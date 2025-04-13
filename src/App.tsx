@@ -7,19 +7,19 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 
 // Import our screens
-import Home from "./screens/Home";
-import Quiz from "./screens/Quiz";
-import Bookmarks from "./screens/Bookmarks";
-import Dashboard from "./screens/Dashboard";
-import Settings from "./screens/Settings";
-import CustomQuizzes from "./screens/CustomQuizzes";
-import CreateQuiz from "./pages/CreateQuiz"; // Import the new page
-import NotFound from "./pages/NotFound";
+import { Home } from "./screens/Home";
+import { Quiz } from "./screens/Quiz";
+import { Bookmarks } from "./screens/Bookmarks";
+import { Dashboard } from "./screens/Dashboard";
+import { Settings } from "./screens/Settings";
+import { CustomQuizzes } from "./screens/CustomQuizzes";
+import { CreateQuiz } from "./pages/CreateQuiz"; // Import the new page
+import { NotFound } from "./pages/NotFound";
 import { getStorage } from "./lib/storage";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+export const App = (): JSX.Element => {
   // Apply dark mode on initial load if enabled
   useEffect(() => {
     const storage = getStorage();
@@ -56,4 +56,4 @@ const App = () => {
   );
 };
 
-export default App;
+// No default export needed, using named export above

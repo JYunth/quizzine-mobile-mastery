@@ -15,13 +15,13 @@ interface QuizCardProps {
   onBookmarkChange?: (isBookmarked: boolean) => void;
 }
 
-const QuizCard = ({ 
-  question, 
-  onAnswer, 
+export const QuizCard = ({
+  question,
+  onAnswer,
   userAnswer,
   isBookmarked,
   onBookmarkChange
-}: QuizCardProps) => {
+}: QuizCardProps): JSX.Element => {
   const [selectedOption, setSelectedOption] = useState<number | null>(userAnswer !== undefined ? userAnswer : null);
   const [startTime, setStartTime] = useState<number>(Date.now());
   
@@ -35,24 +35,25 @@ const QuizCard = ({
     }
   }, [question.id, userAnswer]);
   
-  const handleOptionSelect = (index: number) => {
+  const handleOptionSelect = (index: number): void => {
     if (userAnswer !== undefined) return; // Don't allow changing if in review mode
     setSelectedOption(index);
   };
   
-  const handleSubmit = () => {
+  const handleSubmit = (): void => {
     if (selectedOption === null) return;
     
     const timeTaken = Date.now() - startTime;
     onAnswer({
       questionId: question.id,
       selectedOptionIndex: selectedOption,
+      selectedOptionText: question.options[selectedOption], // Add the selected option text
       correct: selectedOption === question.correctIndex,
-      timeTaken
+      timeTaken,
     });
   };
   
-  const handleToggleBookmark = (e: React.MouseEvent) => {
+  const handleToggleBookmark = (e: React.MouseEvent): void => {
     e.preventDefault();
     e.stopPropagation();
     const isNowBookmarked = toggleBookmark(question.id);
@@ -60,7 +61,7 @@ const QuizCard = ({
     toast(isNowBookmarked ? "Question has been bookmarked" : "Bookmark has been removed");
   };
   
-  const renderOptions = () => {
+  const renderOptions = (): JSX.Element[] => {
     return question.options.map((option, index) => {
       let optionClass = "border rounded-lg p-3 mb-2 cursor-pointer transition-colors";
       
@@ -135,4 +136,4 @@ const QuizCard = ({
   );
 };
 
-export default QuizCard;
+// No default export needed, using named export above

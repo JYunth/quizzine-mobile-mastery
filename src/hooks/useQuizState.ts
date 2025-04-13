@@ -21,7 +21,22 @@ interface UseQuizStateProps {
   id?: string;
 }
 
-export function useQuizState({ mode, week, id }: UseQuizStateProps) {
+export function useQuizState({ mode, week, id }: UseQuizStateProps): {
+  loading: boolean;
+  questions: Question[];
+  currentQuestionIndex: number;
+  answers: Answer[];
+  showResults: boolean;
+  reviewMode: boolean;
+  currentBookmarked: boolean;
+  setCurrentBookmarked: React.Dispatch<React.SetStateAction<boolean>>;
+  displayQuestion: Question | null;
+  handleAnswer: (rawAnswer: Omit<Answer, 'correct' | 'questionId' | 'selectedOptionText'>) => void;
+  handleRetryIncorrect: () => void;
+  handleReviewQuiz: () => void;
+  handleBackToResults: () => void;
+  navigateReview: (direction: 'next' | 'prev') => void;
+} {
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -34,7 +49,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
   // Load questions based on the mode
   useEffect(() => {
     // console.log(`useQuizState: useEffect triggered. mode=${mode}, week=${week}, id=${id}`); // Removed log
-    const loadQuestions = async () => {
+    const loadQuestions = async (): Promise<void> => {
       // console.log("useQuizState: loadQuestions async function started."); // Removed log
       setLoading(true);
       
@@ -133,7 +148,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
     }
   }, [displayQuestion]); // Update when displayQuestion changes
   
-  const handleAnswer = (rawAnswer: Omit<Answer, 'correct' | 'questionId'>) => {
+  const handleAnswer = (rawAnswer: Omit<Answer, 'correct' | 'questionId' | 'selectedOptionText'>): void => {
     if (!displayQuestion) return; // Guard if no question is displayed
 
     // Check correctness against the potentially adjusted correctIndex in displayQuestion
@@ -174,7 +189,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
   };
   
   // Accept the last answer as a parameter
-  const finishQuiz = (lastAnswer: Answer) => { 
+  const finishQuiz = (lastAnswer: Answer): void => {
     // Correctly construct the final list using the state *before* the last answer 
     // and the lastAnswer object passed in.
     const finalAnswersList = [...answers, lastAnswer]; 
@@ -197,7 +212,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
     setShowResults(true);
   };
   
-  const handleRetryIncorrect = () => {
+  const handleRetryIncorrect = (): void => {
     const incorrectIds = answers
       .filter(a => !a.correct)
       .map(a => a.questionId);
@@ -210,18 +225,18 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps) {
     setShowResults(false);
   };
   
-  const handleReviewQuiz = () => {
+  const handleReviewQuiz = (): void => {
     setReviewMode(true);
     setShowResults(false);
     setCurrentQuestionIndex(0);
   };
   
-  const handleBackToResults = () => {
+  const handleBackToResults = (): void => {
     setReviewMode(false);
     setShowResults(true);
   };
   
-  const navigateReview = (direction: 'next' | 'prev') => {
+  const navigateReview = (direction: 'next' | 'prev'): void => {
     if (direction === 'next' && currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else if (direction === 'prev' && currentQuestionIndex > 0) {

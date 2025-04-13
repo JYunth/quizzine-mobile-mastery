@@ -11,7 +11,7 @@ interface ActionCardProps {
   color: string;
 }
 
-const ActionCard = ({ title, description, icon: Icon, to, color }: ActionCardProps) => {
+export const ActionCard = ({ title, description, icon: Icon, to, color }: ActionCardProps): JSX.Element => {
   return (
     <Link to={to}>
       <Card className="h-full hover:shadow-md transition-shadow cursor-pointer overflow-hidden relative">
@@ -32,4 +32,4 @@ const ActionCard = ({ title, description, icon: Icon, to, color }: ActionCardPro
   );
 };
 
-export default ActionCard;
+// No default export needed, using named export above

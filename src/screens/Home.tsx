@@ -1,15 +1,15 @@
 
 import { useEffect, useState, useMemo } from "react"; // Added useMemo
-import PageLayout from "@/components/PageLayout";
+import { PageLayout } from "@/components/PageLayout";
 import { getAllQuestions, getStorage, updateStreak, getAllCourses, getCurrentCourseId, setCurrentCourseId } from "@/lib/storage";
 import { Course, Question } from "@/types";
-import WeekCard from "@/components/WeekCard"; // Assuming WeekCard is not memoized, we might need React.memo later
-import ActionCard from "@/components/ActionCard";
+import { WeekCard } from "@/components/WeekCard"; // Assuming WeekCard is not memoized, we might need React.memo later
+import { ActionCard } from "@/components/ActionCard";
 import { Brain, Zap, ListChecks } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
-const Home = () => {
+export const Home = (): JSX.Element => {
   const [questions, setQuestions] = useState<Question[]>([]); // Questions for the current course
   const [streak, setStreak] = useState(0);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -183,4 +183,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+// No default export needed, using named export above

@@ -7,7 +7,7 @@ interface QuizEmptyProps {
   createAction?: () => void;
 }
 
-const QuizEmpty: React.FC<QuizEmptyProps> = ({ createAction }) => {
+export const QuizEmpty = ({ createAction }: QuizEmptyProps): JSX.Element => {
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -36,4 +36,4 @@ const QuizEmpty: React.FC<QuizEmptyProps> = ({ createAction }) => {
   );
 };
 
-export default QuizEmpty;
+// No default export needed, using named export above

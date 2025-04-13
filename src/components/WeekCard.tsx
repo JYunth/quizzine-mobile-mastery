@@ -12,7 +12,7 @@ interface WeekCardProps {
   weekTitle?: string;
 }
 
-const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps) => {
+export const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps): JSX.Element => {
   const storage = getStorage();
   const currentCourseId = getCurrentCourseId(); // Get the current course ID
 
@@ -91,4 +91,4 @@ const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProps) => {
   );
 };
 
-export default WeekCard;
+// No default export needed, using named export above

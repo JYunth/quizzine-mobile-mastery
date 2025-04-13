@@ -23,7 +23,7 @@ interface CustomQuizItemProps {
   onDelete: (id: string) => void;
 }
 
-const CustomQuizItem: React.FC<CustomQuizItemProps> = ({ quiz, onDelete }) => {
+export const CustomQuizItem = ({ quiz, onDelete }: CustomQuizItemProps): JSX.Element => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const navigate = useNavigate(); // Add useNavigate hook
 
@@ -97,4 +97,4 @@ const CustomQuizItem: React.FC<CustomQuizItemProps> = ({ quiz, onDelete }) => {
   );
 };
 
-export default CustomQuizItem;
+// No default export needed, using named export above

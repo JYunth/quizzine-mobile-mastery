@@ -1,15 +1,15 @@
 
 import { useParams, useLocation } from "react-router-dom"; // Import useLocation
-import PageLayout from "@/components/PageLayout";
-import QuizResults from "@/components/QuizResults";
+import { PageLayout } from "@/components/PageLayout";
+import { QuizResults } from "@/components/QuizResults";
 import { useQuizState } from "@/hooks/useQuizState";
 import { QuizMode } from "@/types";
-import QuizLoading from "@/components/QuizLoading";
-import QuizEmpty from "@/components/QuizEmpty";
-import QuizInProgress from "@/components/QuizInProgress";
+import { QuizLoading } from "@/components/QuizLoading";
+import { QuizEmpty } from "@/components/QuizEmpty";
+import { QuizInProgress } from "@/components/QuizInProgress";
 import { getQuizTitle } from "@/lib/quizUtils";
 
-const Quiz = () => {
+export const Quiz = (): JSX.Element => {
   // Get raw params and location
   const params = useParams<{ mode?: QuizMode; week?: string; id?: string }>();
   const location = useLocation();
@@ -111,4 +111,4 @@ const Quiz = () => {
   );
 };
 
-export default Quiz;
+// No default export needed, using named export above

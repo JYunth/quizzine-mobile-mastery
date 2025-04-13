@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import QuizCard from "@/components/QuizCard";
+import { QuizCard } from "@/components/QuizCard";
 import { Question, Answer } from "@/types";
 import { ArrowLeft, X } from "lucide-react"; // Import X icon
 import { useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ interface QuizInProgressProps {
   onNavigateReview?: (direction: 'next' | 'prev') => void;
 }
 
-const QuizInProgress: React.FC<QuizInProgressProps> = ({
+export const QuizInProgress = ({
   title,
   currentQuestion,
   currentQuestionIndex,
@@ -32,7 +32,7 @@ const QuizInProgress: React.FC<QuizInProgressProps> = ({
   onAnswer,
   onBackToResults,
   onNavigateReview
-}) => {
+}: QuizInProgressProps): JSX.Element => {
   const navigate = useNavigate();
   const progress = ((currentQuestionIndex + (reviewMode ? 0 : 1)) / totalQuestions) * 100;
   
@@ -97,4 +97,4 @@ const QuizInProgress: React.FC<QuizInProgressProps> = ({
   );
 };
 
-export default QuizInProgress;
+// No default export needed, using named export above

@@ -11,11 +11,11 @@ import {
   SidebarMenuButton
 } from "@/components/ui/sidebar";
 
-const DesktopSidebar = () => {
+export const DesktopSidebar = (): JSX.Element => {
   const location = useLocation();
   const currentPath = location.pathname;
   
-  const isActive = (path: string) => {
+  const isActive = (path: string): boolean => {
     return currentPath === path;
   };
   
@@ -74,4 +74,4 @@ const DesktopSidebar = () => {
   );
 };
 
-export default DesktopSidebar;
+// No default export needed, using named export above

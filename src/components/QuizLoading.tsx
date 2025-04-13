@@ -6,10 +6,10 @@ interface QuizLoadingProps {
   className?: string;
 }
 
-const QuizLoading: React.FC<QuizLoadingProps> = ({ 
+export const QuizLoading = ({
   message = "Loading questions...",
-  className = "h-[80vh]" 
-}) => {
+  className = "h-[80vh]"
+}: QuizLoadingProps): JSX.Element => {
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <div className="text-center">
@@ -20,4 +20,4 @@ const QuizLoading: React.FC<QuizLoadingProps> = ({
   );
 };
 
-export default QuizLoading;
+// No default export needed, using named export above

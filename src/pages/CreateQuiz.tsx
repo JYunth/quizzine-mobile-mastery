@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"; // Import useParams
-import PageLayout from "@/components/PageLayout";
+import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ import {
 import { X, Filter, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-const CreateQuiz = () => {
+export const CreateQuiz = (): JSX.Element => {
   const navigate = useNavigate();
   const { quizId } = useParams<{ quizId?: string }>(); // Get quizId from URL params
   const isEditMode = Boolean(quizId); // Determine if in edit mode
@@ -32,7 +32,7 @@ const CreateQuiz = () => {
 
   // Load questions and potentially existing quiz data
   useEffect(() => {
-    const loadData = async () => {
+    const loadData = async (): Promise<void> => {
       setLoading(true);
       setInitialLoadComplete(false); // Reset load completion flag
       try {
@@ -89,7 +89,7 @@ const CreateQuiz = () => {
   // Get unique courses for filtering
   // Remove courses calculation as it's no longer needed for filtering
 
-  const handleSelectQuestion = (questionId: string) => {
+  const handleSelectQuestion = (questionId: string): void => {
     setSelectedQuestions(prev => {
       if (prev.includes(questionId)) {
         return prev.filter(id => id !== questionId);
@@ -100,7 +100,7 @@ const CreateQuiz = () => {
   };
 
   // Renamed handler to be more generic
-  const handleSubmit = () => { 
+  const handleSubmit = (): void => {
     const trimmedName = quizName.trim();
     if (!trimmedName) {
       toast.error("Please enter a quiz name");
@@ -309,4 +309,4 @@ const CreateQuiz = () => {
   );
 };
 
-export default CreateQuiz;
+// No default export needed, using named export above

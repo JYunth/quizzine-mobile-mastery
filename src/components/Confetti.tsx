@@ -37,7 +37,7 @@ export type ConfettiRef = Api | null;
 
 const ConfettiContext = createContext<Api>({} as Api);
 
-const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
+const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref): JSX.Element | null => {
   const {
     options,
     globalOptions = { resize: true, useWorker: true },
@@ -48,7 +48,7 @@ const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
   const instanceRef = useRef<ConfettiInstance | null>(null);
 
   const canvasRef = useCallback(
-    (node: HTMLCanvasElement) => {
+    (node: HTMLCanvasElement): void => {
       if (node !== null) {
         if (instanceRef.current) return;
         instanceRef.current = confetti.create(node, {
@@ -66,7 +66,7 @@ const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
   );
 
   const fire = useCallback(
-    async (opts = {}) => {
+    async (opts = {}): Promise<void> => {
       try {
         await instanceRef.current?.({ ...options, ...opts });
       } catch (error) {
@@ -120,8 +120,8 @@ const ConfettiButtonComponent = ({
   options,
   children,
   ...props
-}: ConfettiButtonProps) => {
-  const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+}: ConfettiButtonProps): JSX.Element => {
+  const handleClick = async (event: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
     try {
       const rect = event.currentTarget.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
@@ -156,13 +156,13 @@ interface ConfettiSideCannonsProps {
   duration?: number;
 }
 
-export function ConfettiSideCannons({ duration = 1000 }: ConfettiSideCannonsProps) {
+export function ConfettiSideCannons({ duration = 1000 }: ConfettiSideCannonsProps): null {
   useEffect(() => {
     const startTime = Date.now();
     const endTime = startTime + duration;
     const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"]; // Example colors
 
-    const frame = () => {
+    const frame = (): void => {
       if (Date.now() > endTime) return; // Stop after duration
 
       // Left cannon
