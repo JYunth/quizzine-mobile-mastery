@@ -8,11 +8,13 @@ export const getQuizTitle = (
 ): string => {
   switch(mode) {
     case 'weekly':
-      if (!week) return 'Quiz';
-      const weekTitle = questions.length > 0 && questions[0].weekTitle 
-        ? `Week ${week} - ${questions[0].weekTitle}` 
-        : `Week ${week}`;
-      return weekTitle;
+      {
+        if (!week) return 'Quiz';
+        const weekTitle = questions.length > 0 && questions[0].weekTitle
+          ? `Week ${week} - ${questions[0].weekTitle}`
+          : `Week ${week}`;
+        return weekTitle;
+      }
     case 'full':
       return 'Full Quiz';
     case 'bookmark':
