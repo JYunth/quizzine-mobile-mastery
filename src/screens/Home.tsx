@@ -118,7 +118,7 @@ export const Home = (): JSX.Element => {
             color="bg-purple-600"
           />
           <ActionCard 
-            title="Quick Quiz" 
+            title="Boss Battle"
             description="Take a quiz with all questions"
             icon={Zap}
             to="/quiz/full"
