@@ -4,8 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
-
+import { ThemeProvider } from "./contexts/ThemeContext"; // Import ThemeProvider
+ 
 // Import our screens
 import { Home } from "./screens/Home";
 import { Quiz } from "./screens/Quiz";
@@ -20,38 +20,13 @@ import { getStorage } from "./lib/storage";
 const queryClient = new QueryClient();
 
 export const App = (): JSX.Element => {
-  // Apply theme on initial load based on storage or system preference
-  useEffect(() => {
-    const storage = getStorage();
-    const userPreference = storage.settings.darkMode; // boolean | undefined
-
-    let applyDarkMode: boolean;
-
-    if (userPreference !== undefined) {
-      // Use stored preference if it exists
-      applyDarkMode = userPreference;
-    } else {
-      // Otherwise, check system preference
-      applyDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      // Optional: You could store this initial system preference back to storage here
-      // if you want the first detected preference to persist, but the requirement
-      // is to only use it if no user setting exists.
-      // storage.settings.darkMode = applyDarkMode; // Uncomment to save initial detection
-      // saveStorage(storage); // Assuming a save function exists
-    }
-
-    if (applyDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
+  // Theme logic is now handled by ThemeProvider
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner position="top-center" closeButton />
+        <ThemeProvider> {/* Wrap with ThemeProvider */}
+          <Toaster />
+          <Sonner position="top-center" closeButton />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -69,7 +44,8 @@ export const App = (): JSX.Element => {
             <Route path="/edit-quiz/:quizId" element={<CreateQuiz />} /> {/* Add the edit route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
+          </BrowserRouter>
+        </ThemeProvider> {/* Close ThemeProvider */}
       </TooltipProvider>
     </QueryClientProvider>
   );

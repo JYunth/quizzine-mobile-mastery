@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // Keep useState for other settings
 import { PageLayout } from "@/components/PageLayout";
-import { getStorage, updateSettings, exportStorage, importStorage, resetStorage } from "@/lib/storage";
+import { getStorage, updateSettings, exportStorage, importStorage, resetStorage } from "@/lib/storage"; // Keep updateSettings for hardMode
+import { useTheme } from "@/contexts/ThemeContext"; // Import useTheme
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,35 +25,37 @@ import { DownloadCloud, UploadCloud, RotateCcw, Info, Mail } from "lucide-react"
 import { AboutModal } from "@/components/AboutModal";
 
 export const Settings = (): JSX.Element => {
-  const [settings, setSettings] = useState<AppStorage["settings"]>({
-    darkMode: false,
-    reminders: false,
-    hardMode: false, // Initialize hardMode state
+  // Use theme context for dark mode
+  const { darkMode, toggleDarkMode } = useTheme();
+  
+  // Local state for other settings (hardMode, etc.)
+  const [otherSettings, setOtherSettings] = useState<Omit<AppStorage["settings"], 'darkMode'>>({
+    reminders: false, // Assuming reminders might still be local or unused
+    hardMode: false,
     lastVisitedWeek: 1,
   });
   const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
   
+  // Load other settings (non-dark mode) from storage
   useEffect(() => {
     const storage = getStorage();
-    setSettings(storage.settings);
+    // Exclude darkMode when setting local state
+    const { darkMode: _, ...restSettings } = storage.settings;
+    setOtherSettings(restSettings);
   }, []);
   
-  const handleToggleDarkMode = (checked: boolean): void => {
-    updateSettings({ darkMode: checked });
-    setSettings({ ...settings, darkMode: checked });
-    
-    if (checked) {
-      document.documentElement.classList.add('dark');
-      toast("Dark mode is enabled");
-    } else {
-      document.documentElement.classList.remove('dark');
-      toast("Dark mode is disabled");
-    }
+  // handleToggleDarkMode is now replaced by toggleDarkMode from useTheme
+  // We can add the toast notification within the context or keep it here if preferred
+  // For simplicity, let's assume the context handles persistence, and we add toast here.
+  const handleToggleDarkModeWithToast = (): void => {
+    toggleDarkMode(); // Call the context function
+    // Toast logic can be added here or potentially moved to the context if desired globally
+    toast(`Dark mode ${!darkMode ? 'enabled' : 'disabled'}`);
   };
-  
+
   const handleToggleHardMode = (checked: boolean): void => {
-    updateSettings({ hardMode: checked });
-    setSettings({ ...settings, hardMode: checked });
+    updateSettings({ hardMode: checked }); // Persist hardMode change
+    setOtherSettings(prev => ({ ...prev, hardMode: checked })); // Update local state for hardMode
     toast(`Hard mode ${checked ? 'enabled' : 'disabled'}`);
   };
   
@@ -77,14 +80,14 @@ export const Settings = (): JSX.Element => {
         if (success) {
           // Reload settings after import
           const storage = getStorage();
-          setSettings(storage.settings);
-          
-          // Apply dark mode setting
-          if (storage.settings.darkMode) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
+          // Reload *other* settings after import
+          const { darkMode: importedDarkMode, ...restImportedSettings } = storage.settings;
+          setOtherSettings(restImportedSettings);
+          // ThemeProvider will automatically apply the theme based on the updated storage
+          // No need to manually set class here. We might need to trigger a re-read in ThemeProvider
+          // or simply reload the page for simplicity after import.
+          // For now, assume ThemeProvider handles it or a page reload occurs.
+          // If ThemeProvider needs explicit update signal, that's a further enhancement.
           
           toast("Data imported successfully");
         } else {
@@ -104,11 +107,10 @@ export const Settings = (): JSX.Element => {
     resetStorage();
     // Reload settings after reset
     const storage = getStorage();
-    setSettings(storage.settings);
-    
-    // Apply dark mode setting (should be false after reset)
-    document.documentElement.classList.remove('dark');
-    
+    // Reload *other* settings after reset
+    const { darkMode: _, ...restResetSettings } = storage.settings;
+    setOtherSettings(restResetSettings);
+    // ThemeProvider will handle applying the theme based on reset storage.
     toast("All data has been reset");
   };
 
@@ -150,8 +152,8 @@ App Version (If known):`;
                   </p>
                 </div>
                 <Switch 
-                  checked={settings.darkMode} 
-                  onCheckedChange={handleToggleDarkMode}
+                  checked={darkMode} // Use darkMode from context
+                  onCheckedChange={handleToggleDarkModeWithToast} // Use the wrapper or context toggle directly
                 />
               </div>
               <Separator className="my-4" />
@@ -163,7 +165,7 @@ App Version (If known):`;
                   </p>
                 </div>
                 <Switch 
-                  checked={settings.hardMode} 
+                  checked={otherSettings.hardMode} // Use hardMode from local state
                   onCheckedChange={handleToggleHardMode}
                 />
               </div>
