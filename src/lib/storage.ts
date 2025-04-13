@@ -1,5 +1,5 @@
 import { AppStorage, Question, QuizAttempt, CustomQuiz, Course } from "@/types";
-// Import the new Map getter from questionStore
+import { getUTCTodayTimestamp, isSameUTCDay, isYesterdayUTC } from "@/lib/utils";
 // Removed unused import from deleted questionStore
 
 const STORAGE_KEY = 'quizzineApp';
@@ -17,23 +17,80 @@ const initialStorage: AppStorage = {
   },
   confidenceRatings: {},
   streaks: {
-    lastActive: new Date().toISOString().split('T')[0],
-    currentStreak: 1,
+    lastActiveTimestamp: 0, // Initialize to 0 (no activity yet)
+    currentStreak: 0,       // Initialize to 0
   },
   customQuizzes: [],
 };
 
 // Get storage from localStorage
 export const getStorage = (): AppStorage => {
+  let storage: AppStorage;
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) {
-      return initialStorage;
+      console.log("No existing storage found, initializing.");
+      storage = { ...initialStorage }; // Use a copy
+      // Initialize timestamp properly if starting fresh
+      storage.streaks.lastActiveTimestamp = 0; // Explicitly set to 0
+      storage.streaks.currentStreak = 0;       // Explicitly set to 0
+      saveStorage(storage); // Save initial state if none exists
+      return storage;
     }
-    return JSON.parse(data);
+
+    storage = JSON.parse(data);
+
+    // --- Migration Logic ---
+    if (storage.streaks && typeof (storage.streaks as any).lastActive === 'string') {
+      console.warn("Migrating old streak 'lastActive' string to 'lastActiveTimestamp'.");
+      const oldDateString = (storage.streaks as any).lastActive;
+      const date = new Date(oldDateString + 'T00:00:00Z'); // Assume YYYY-MM-DD was UTC
+
+      if (!isNaN(date.getTime())) {
+        date.setUTCHours(0, 0, 0, 0); // Ensure it's the start of the day in UTC
+        storage.streaks.lastActiveTimestamp = date.getTime();
+      } else {
+        console.error("Failed to parse old lastActive date string during migration:", oldDateString);
+        storage.streaks.lastActiveTimestamp = 0; // Fallback
+      }
+      delete (storage.streaks as any).lastActive; // Remove old property
+
+      // Ensure currentStreak is a number, default to 1 if migrating from an active state
+      if (typeof storage.streaks.currentStreak !== 'number' || isNaN(storage.streaks.currentStreak)) {
+         storage.streaks.currentStreak = storage.streaks.lastActiveTimestamp > 0 ? 1 : 0;
+      }
+      // Save migrated data immediately
+      saveStorage(storage);
+
+    } else if (!storage.streaks) {
+        // If streaks object itself is missing, initialize it
+        console.warn("Streaks object missing, initializing.");
+        storage.streaks = { ...initialStorage.streaks };
+        saveStorage(storage);
+    } else if (typeof storage.streaks.lastActiveTimestamp !== 'number') {
+        // If timestamp is missing or not a number, initialize it
+        console.warn("lastActiveTimestamp missing or invalid, initializing.");
+        storage.streaks.lastActiveTimestamp = 0;
+        storage.streaks.currentStreak = 0; // Reset streak too
+        saveStorage(storage);
+    } else if (typeof storage.streaks.currentStreak !== 'number') {
+        // If streak is missing or not a number, initialize it
+        console.warn("currentStreak missing or invalid, initializing.");
+        storage.streaks.currentStreak = 0;
+        saveStorage(storage);
+    }
+    // --- End Migration Logic ---
+
+    return storage;
+
   } catch (error) {
-    console.error('Failed to parse storage', error);
-    return initialStorage;
+    console.error('Failed to parse or migrate storage, resetting to initial state.', error);
+    // If parsing or migration fails catastrophically, reset to initial
+    storage = { ...initialStorage };
+    storage.streaks.lastActiveTimestamp = 0;
+    storage.streaks.currentStreak = 0;
+    saveStorage(storage);
+    return storage;
   }
 };
 
@@ -77,27 +134,38 @@ export const importStorage = (jsonString: string): boolean => {
   }
 };
 
-// Update streak data
+/**
+ * Updates the user's activity streak based on UTC days.
+ * Should be called once per app session, ideally on load.
+ */
 export const updateStreak = (): void => {
   const storage = getStorage();
-  const today = new Date().toISOString().split('T')[0];
-  const lastActive = storage.streaks.lastActive;
-  
-  // If last active was yesterday, increase streak
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
-  
-  if (lastActive === yesterdayStr) {
-    storage.streaks.currentStreak += 1;
-  } 
-  // If last active was before yesterday, reset streak
-  else if (lastActive < yesterdayStr) {
-    storage.streaks.currentStreak = 1;
+  const todayTimestamp = getUTCTodayTimestamp();
+  const lastActiveTimestamp = storage.streaks.lastActiveTimestamp || 0; // Default to 0 if undefined
+
+  // 1. Check if already updated today
+  if (isSameUTCDay(lastActiveTimestamp, todayTimestamp)) {
+    // console.log("Streak already updated today.");
+    return; // No need to update again
   }
-  
-  storage.streaks.lastActive = today;
+
+  // 2. Check if last active was yesterday (UTC)
+  if (isYesterdayUTC(lastActiveTimestamp, todayTimestamp)) {
+    // console.log("Continuing streak!");
+    storage.streaks.currentStreak = (storage.streaks.currentStreak || 0) + 1; // Increment
+  }
+  // 3. Check if last active was before yesterday (streak broken)
+  else {
+    // console.log("Streak broken or first activity.");
+    storage.streaks.currentStreak = 1; // Reset to 1 (for today's activity)
+  }
+
+  // 4. Update the last active timestamp to today
+  storage.streaks.lastActiveTimestamp = todayTimestamp;
+
+  // 5. Save the updated storage
   saveStorage(storage);
+  // console.log("Streak updated:", storage.streaks);
 };
 
 // Save quiz attempt
@@ -105,7 +173,7 @@ export const saveQuizAttempt = (attempt: QuizAttempt): void => {
   const storage = getStorage();
   storage.attempts.push(attempt);
   saveStorage(storage);
-  updateStreak();
+  // updateStreak(); // Removed: Streak update is now handled centrally, e.g., on app load
 };
 
 // Toggle bookmark for a question

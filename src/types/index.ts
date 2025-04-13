@@ -61,7 +61,7 @@ export interface AppStorage {
   };
   confidenceRatings: { [questionId: string]: number };
   streaks: {
-    lastActive: string;
+    lastActiveTimestamp: number; // UTC timestamp (milliseconds) of the start of the last active day
     currentStreak: number;
   };
   customQuizzes: CustomQuiz[];

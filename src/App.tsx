@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext"; // Import ThemeProvider
- 
+import { useStreak } from "./hooks/useStreak"; // Import the streak hook
 // Import our screens
 import { Home } from "./screens/Home";
 import { Quiz } from "./screens/Quiz";
@@ -20,6 +20,9 @@ import { getStorage } from "./lib/storage";
 const queryClient = new QueryClient();
 
 export const App = (): JSX.Element => {
+  // Call the streak hook to ensure the logic runs on app load
+  useStreak();
+
   // Theme logic is now handled by ThemeProvider
   return (
     <QueryClientProvider client={queryClient}>

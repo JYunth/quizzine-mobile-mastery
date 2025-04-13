@@ -1,9 +1,9 @@
 
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react"; // Removed useEffect, useState
 import { useQuery } from "@tanstack/react-query";
 import { useQuestions } from "@/hooks/useQuestions"; // Import useQuestions
 import { PageLayout } from "@/components/PageLayout";
-import { getAllQuestions, getStorage, updateStreak, getCurrentCourseId } from "@/lib/storage"; // Removed setCurrentCourseId, getAllCourses
+import { getAllQuestions, getStorage, getCurrentCourseId } from "@/lib/storage"; // Removed updateStreak, setCurrentCourseId, getAllCourses
 import { Question } from "@/types"; // Removed Course
 import { WeekCard } from "@/components/WeekCard";
 import { ActionCard } from "@/components/ActionCard";
@@ -13,8 +13,7 @@ import { Brain, Zap, ListChecks } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
 
 export const Home = (): JSX.Element => {
-  // Local state for UI interaction
-  const [streak, setStreak] = useState(0);
+  // Removed local streak state
   // Removed currentCourseId state
 
   // Fetch base question data (includes courses)
@@ -53,12 +52,10 @@ export const Home = (): JSX.Element => {
   });
   const safeCourseQuestions = courseQuestions ?? []; // Ensure it's always an array
 
-  // Effect for streak (remains unchanged as it uses localStorage)
-  useEffect(() => {
-    const storage = getStorage();
-    setStreak(storage.streaks.currentStreak);
-    updateStreak(); // Update streak for today
-  }, []); // Run once on mount
+  // Removed useEffect for streak update (now handled by useStreak in App.tsx)
+
+  // Read the current streak directly from storage for display
+  const currentStreak = getStorage().streaks.currentStreak || 0;
 
   // Memoize the calculation of week data
   const weekData = useMemo(() => {
@@ -99,13 +96,15 @@ export const Home = (): JSX.Element => {
             <div>
               <h2 className="font-semibold text-xl">Welcome back!</h2>
               <p className="text-sm text-muted-foreground">
-                {streak > 1 
-                  ? `You're on a ${streak}-day streak. Keep it up!`
+                {currentStreak > 1
+                  ? `You're on a ${currentStreak}-day streak. Keep it up!`
+                  : currentStreak === 1
+                  ? "You're on a 1-day streak. Keep it going!"
                   : "Start your learning streak today!"}
               </p>
             </div>
             <div className="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center font-bold">
-              {streak}
+              {currentStreak}
             </div>
           </div>
         </div>
