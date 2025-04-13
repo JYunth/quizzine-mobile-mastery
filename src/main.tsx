@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App.tsx';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register'
+import { inject } from '@vercel/analytics';
 
 // Register the service worker
 const updateSW = registerSW({
@@ -21,6 +22,7 @@ const queryClient = new QueryClient();
 
 const rootElement = document.getElementById("root");
 if (rootElement) {
+  inject(); // Initialize Vercel Analytics
   createRoot(rootElement).render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
