@@ -20,11 +20,30 @@ import { getStorage } from "./lib/storage";
 const queryClient = new QueryClient();
 
 export const App = (): JSX.Element => {
-  // Apply dark mode on initial load if enabled
+  // Apply theme on initial load based on storage or system preference
   useEffect(() => {
     const storage = getStorage();
-    if (storage.settings.darkMode) {
+    const userPreference = storage.settings.darkMode; // boolean | undefined
+
+    let applyDarkMode: boolean;
+
+    if (userPreference !== undefined) {
+      // Use stored preference if it exists
+      applyDarkMode = userPreference;
+    } else {
+      // Otherwise, check system preference
+      applyDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      // Optional: You could store this initial system preference back to storage here
+      // if you want the first detected preference to persist, but the requirement
+      // is to only use it if no user setting exists.
+      // storage.settings.darkMode = applyDarkMode; // Uncomment to save initial detection
+      // saveStorage(storage); // Assuming a save function exists
+    }
+
+    if (applyDarkMode) {
       document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
   }, []);
 
