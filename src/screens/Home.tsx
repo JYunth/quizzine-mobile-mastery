@@ -3,19 +3,19 @@ import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useQuestions } from "@/hooks/useQuestions"; // Import useQuestions
 import { PageLayout } from "@/components/PageLayout";
-import { getAllQuestions, getStorage, updateStreak, getAllCourses, getCurrentCourseId, setCurrentCourseId } from "@/lib/storage"; // Keep storage functions
-import { Course, Question } from "@/types";
+import { getAllQuestions, getStorage, updateStreak, getCurrentCourseId } from "@/lib/storage"; // Removed setCurrentCourseId, getAllCourses
+import { Question } from "@/types"; // Removed Course
 import { WeekCard } from "@/components/WeekCard";
 import { ActionCard } from "@/components/ActionCard";
 import { Brain, Zap, ListChecks } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
+// Removed Select imports
+// Removed toast import (assuming it was only for course change)
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
 
 export const Home = (): JSX.Element => {
   // Local state for UI interaction
   const [streak, setStreak] = useState(0);
-  const [currentCourseId, setCurrentCourseState] = useState<string>(getCurrentCourseId());
+  // Removed currentCourseId state
 
   // Fetch base question data (includes courses)
   const {
@@ -33,34 +33,22 @@ export const Home = (): JSX.Element => {
   const isSuccessCourses = !isLoadingBase && !isErrorBase && !!questionData;
   const isErrorCourses = isErrorBase;
 
-  // Effect to set initial course ID once courses are successfully loaded
-  useEffect(() => {
-    // Use safeCourses and check length
-    if (isSuccessCourses && safeCourses.length > 0) {
-      const initialCourseId = getCurrentCourseId();
-      // Check if the currently stored course ID exists in the loaded courses
-      if (!safeCourses.some(c => c.id === initialCourseId)) {
-        // If not valid, use the first course as a fallback
-        const fallbackId = safeCourses[0].id;
-        setCurrentCourseState(fallbackId);
-        setCurrentCourseId(fallbackId); // Persist the fallback ID
-      } else {
-        // If valid, ensure the local state matches the persisted one
-        setCurrentCourseState(initialCourseId);
-      }
-    }
-  }, [isSuccessCourses, safeCourses]); // Depend on safeCourses
+  // Removed effect for setting initial course ID state
 
   // Fetch questions for the selected course using TanStack Query
   // Fetch questions filtered for the selected course (dependent query)
+  // Fetch questions for the selected course using TanStack Query
+  // Fetch questions filtered for the selected course (dependent query)
+  // Read currentCourseId directly from storage for the query
+  const currentCourseIdFromStorage = getCurrentCourseId();
   const { data: courseQuestions, isLoading: isLoadingCourseQuestions, isError: isErrorCourseQuestions } = useQuery<Question[]>({
-    queryKey: ['courseQuestions', currentCourseId, questionData?.allQuestions], // Depends on base data
+    queryKey: ['courseQuestions', currentCourseIdFromStorage, questionData?.allQuestions], // Depends on base data and stored course ID
     queryFn: () => {
       if (!questionData?.allQuestions) return []; // Guard
       return getAllQuestions(questionData.allQuestions); // Pass base data
     },
-    // Enable only when base data is ready AND a course ID is selected
-    enabled: !!questionData?.allQuestions && !!currentCourseId && isSuccessCourses,
+    // Enable only when base data is ready AND a course ID is available from storage
+    enabled: !!questionData?.allQuestions && !!currentCourseIdFromStorage && isSuccessCourses,
     staleTime: 1000 * 60 * 5,
   });
   const safeCourseQuestions = courseQuestions ?? []; // Ensure it's always an array
@@ -96,13 +84,7 @@ export const Home = (): JSX.Element => {
     return weekMap;
   }, [safeCourseQuestions, isLoadingBase, isLoadingCourseQuestions, isErrorBase, isErrorCourseQuestions]); // Update dependencies
   
-  const handleCourseChange = (courseId: string) => {
-    setCurrentCourseState(courseId);
-    setCurrentCourseId(courseId);
-    // Use safeCourses
-    const courseName = safeCourses.find(c => c.id === courseId)?.name ?? 'Unknown Course';
-    toast(`Switched to ${courseName}`);
-  };
+  // Removed handleCourseChange
   
   // Get unique weeks and sort them from the memoized data
   const weeks = useMemo(() => Array.from(weekData.keys()).sort((a, b) => a - b), [weekData]);
@@ -110,24 +92,7 @@ export const Home = (): JSX.Element => {
   return (
     <PageLayout title="Quizzine">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6 flex justify-between items-center">
-          <div className="flex-grow">
-            <h2 className="text-lg font-semibold mb-1">Course</h2>
-            <Select value={currentCourseId} onValueChange={handleCourseChange}>
-              <SelectTrigger className="w-full max-w-xs">
-                <SelectValue placeholder="Select a course" />
-              </SelectTrigger>
-              <SelectContent>
-                {/* Use safeCourses */}
-                {safeCourses.map(course => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        {/* Removed Course Selection Dropdown Section */}
         
         <div className="mb-6 p-4 bg-primary/10 rounded-lg">
           <div className="flex justify-between items-center">

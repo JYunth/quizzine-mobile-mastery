@@ -1,14 +1,17 @@
 
-import { useState, useEffect } from "react"; // Keep useState for other settings
+import { useState, useEffect, useMemo } from "react"; // Added useMemo
 import { PageLayout } from "@/components/PageLayout";
-import { getStorage, updateSettings, exportStorage, importStorage, resetStorage } from "@/lib/storage"; // Keep updateSettings for hardMode
+import { getStorage, updateSettings, exportStorage, importStorage, resetStorage, getCurrentCourseId, setCurrentCourseId } from "@/lib/storage"; // Added course functions
 import { useTheme } from "@/contexts/ThemeContext"; // Import useTheme
+import { useQuestions } from "@/hooks/useQuestions"; // Added useQuestions
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { AppStorage } from "@/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added Select
+import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton
+import { AppStorage, Course } from "@/types"; // Added Course
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -35,6 +38,7 @@ export const Settings = (): JSX.Element => {
     lastVisitedWeek: 1,
   });
   const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
+  const [currentCourseId, setCurrentCourseState] = useState<string>(getCurrentCourseId()); // Added course state
   
   // Load other settings (non-dark mode) from storage
   useEffect(() => {
@@ -43,6 +47,32 @@ export const Settings = (): JSX.Element => {
     const { darkMode: _, ...restSettings } = storage.settings;
     setOtherSettings(restSettings);
   }, []);
+
+  // Fetch base question data (includes courses) for the dropdown
+  const {
+    data: questionData,
+    isLoading: isLoadingBase, // Consider adding loading/error states to UI if needed
+    isError: isErrorBase,
+  } = useQuestions();
+
+  // Derive courses directly from the base data hook
+  const courses = useMemo(() => questionData?.courses ?? [], [questionData]);
+  const safeCourses = courses ?? []; // Ensure it's always an array
+  const isSuccessCourses = !isLoadingBase && !isErrorBase && !!questionData;
+
+  // Effect to set initial course ID once courses are successfully loaded
+  useEffect(() => {
+    if (isSuccessCourses && safeCourses.length > 0) {
+      const initialCourseId = getCurrentCourseId();
+      if (!safeCourses.some(c => c.id === initialCourseId)) {
+        const fallbackId = safeCourses[0].id;
+        setCurrentCourseState(fallbackId);
+        setCurrentCourseId(fallbackId);
+      } else {
+        setCurrentCourseState(initialCourseId);
+      }
+    }
+  }, [isSuccessCourses, safeCourses]);
   
   // handleToggleDarkMode is now replaced by toggleDarkMode from useTheme
   // We can add the toast notification within the context or keep it here if preferred
@@ -57,6 +87,13 @@ export const Settings = (): JSX.Element => {
     updateSettings({ hardMode: checked }); // Persist hardMode change
     setOtherSettings(prev => ({ ...prev, hardMode: checked })); // Update local state for hardMode
     toast(`Hard mode ${checked ? 'enabled' : 'disabled'}`);
+  };
+
+  const handleCourseChange = (courseId: string): void => {
+    setCurrentCourseState(courseId);
+    setCurrentCourseId(courseId);
+    const courseName = safeCourses.find(c => c.id === courseId)?.name ?? 'Unknown Course';
+    toast(`Switched to ${courseName}`);
   };
   
   const handleExport = (): void => {
@@ -156,7 +193,12 @@ App Version (If known):`;
                   onCheckedChange={handleToggleDarkModeWithToast} // Use the wrapper or context toggle directly
                 />
               </div>
-              <Separator className="my-4" />
+            </div>
+          </div>
+          
+          <div>
+            <h2 className="text-lg font-medium mb-2">Academic Preferences</h2>
+            <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-medium">Hard Mode</h3>
@@ -164,14 +206,40 @@ App Version (If known):`;
                     Shuffle options
                   </p>
                 </div>
-                <Switch 
+                <Switch
                   checked={otherSettings.hardMode} // Use hardMode from local state
                   onCheckedChange={handleToggleHardMode}
                 />
               </div>
+              <Separator className="my-4" />
+              {/* Course Selection Dropdown */}
+              <div>
+                <h3 className="font-medium mb-2">Selected Course</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Choose the default course for quizzes.
+                </p>
+                {isLoadingBase ? (
+                  <Skeleton className="h-10 w-full max-w-xs" />
+                ) : isErrorBase ? (
+                  <p className="text-sm text-destructive">Error loading courses.</p>
+                ) : (
+                  <Select value={currentCourseId} onValueChange={handleCourseChange}>
+                    <SelectTrigger className="w-full max-w-xs">
+                      <SelectValue placeholder="Select a course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {safeCourses.map(course => (
+                        <SelectItem key={course.id} value={course.id}>
+                          {course.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             </div>
           </div>
-          
+
           <div>
             <h2 className="text-lg font-medium mb-2">Data Management</h2>
             <div className="bg-card rounded-lg border p-4 space-y-4">
@@ -231,25 +299,9 @@ App Version (If known):`;
                 </AlertDialog>
               </div>
             </div>
-  
-            <div>
-              <h2 className="text-lg font-medium mb-2">Support</h2>
-              <div className="bg-card rounded-lg border p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">Report a Bug</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Found an issue? Let us know via email.
-                    </p>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={handleReportBug}>
-                    <Mail className="mr-2 h-4 w-4" />
-                    Report Bug
-                  </Button>
-                </div>
-              </div>
-            </div>
           </div>
+          
+          {/* Support Section Removed */}
           
           <div>
             <h2 className="text-lg font-medium mb-2">About</h2>
@@ -269,6 +321,20 @@ App Version (If known):`;
                     </Button>
                   }
                 />
+              </div>
+              <Separator className="my-4" />
+              {/* Report a Bug - Moved into About section */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">Report a Bug</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Found an issue? Let me know via email.
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleReportBug}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Report Bug
+                </Button>
               </div>
             </div>
           </div>
