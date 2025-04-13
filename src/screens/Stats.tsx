@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/PageLayout";
 import { getStorage } from "@/lib/storage";
@@ -7,7 +6,7 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { AppStorage, QuizAttempt } from "@/types";
 import { Badge } from "@/components/ui/badge";
 
-export const Dashboard = (): JSX.Element => {
+export const Stats = (): JSX.Element => {
   const [storage, setStorage] = useState<AppStorage | null>(null);
   
   useEffect(() => {
@@ -16,7 +15,7 @@ export const Dashboard = (): JSX.Element => {
   
   if (!storage) {
     return (
-      <PageLayout title="Dashboard">
+      <PageLayout title="Stats">
         <div className="text-center py-10">Loading...</div>
       </PageLayout>
     );
@@ -24,11 +23,10 @@ export const Dashboard = (): JSX.Element => {
   
   // Prepare data for charts
   const weeklyScores = prepareWeeklyScores(storage.attempts);
-  const tagPerformance = prepareTagPerformance(storage);
   const quizHistory = prepareQuizHistory(storage.attempts);
   
   return (
-    <PageLayout title="Dashboard">
+    <PageLayout title="Stats">
       <div className="max-w-4xl mx-auto">
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -73,36 +71,6 @@ export const Dashboard = (): JSX.Element => {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </CardContent>
-            </Card>
-            
-            {/* Tag Performance */}
-            <h2 className="font-semibold text-xl mb-4">Performance by Topic</h2>
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                {tagPerformance.length === 0 ? (
-                  <p className="text-center py-4 text-muted-foreground">Not enough data yet</p>
-                ) : (
-                  tagPerformance.map(tag => (
-                    <div key={tag.tag} className="mb-4">
-                      <div className="flex justify-between mb-1">
-                        <div className="flex items-center">
-                          <Badge variant="outline" className="mr-2">{tag.tag}</Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {tag.correct} of {tag.total} correct
-                          </span>
-                        </div>
-                        <span className="font-medium">{tag.percentage}%</span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div 
-                          className="bg-primary rounded-full h-2" 
-                          style={{ width: `${tag.percentage}%` }} 
-                        />
-                      </div>
-                    </div>
-                  ))
-                )}
               </CardContent>
             </Card>
             
@@ -168,17 +136,6 @@ function prepareWeeklyScores(attempts: QuizAttempt[]): { name: string; score: nu
       score: Math.round((data.correct / data.total) * 100)
     }))
     .sort((a, b) => parseInt(a.name.split(' ')[1]) - parseInt(b.name.split(' ')[1]));
-}
-
-function prepareTagPerformance(storage: AppStorage): { tag: string; correct: number; total: number; percentage: number; }[] {
-  // This would require accessing the questions to get tag data
-  // For now, returning a stub
-  return [
-    { tag: 'JavaScript', correct: 12, total: 15, percentage: 80 },
-    { tag: 'HTML', correct: 8, total: 10, percentage: 80 },
-    { tag: 'CSS', correct: 6, total: 10, percentage: 60 },
-    { tag: 'Algorithms', correct: 4, total: 8, percentage: 50 },
-  ];
 }
 
 function prepareQuizHistory(attempts: QuizAttempt[]): QuizAttempt[] {

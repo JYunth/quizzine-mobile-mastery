@@ -18,6 +18,8 @@ interface QuizInProgressProps {
   onAnswer: (answer: Answer) => void;
   onBackToResults?: () => void;
   onNavigateReview?: (direction: 'next' | 'prev') => void;
+  onGoToPrevious?: () => void; // Add prop for going back during quiz
+  answers: Answer[]; // Add answers array to find previous selections
 }
 
 export const QuizInProgress = ({
@@ -31,10 +33,15 @@ export const QuizInProgress = ({
   onBookmarkChange,
   onAnswer,
   onBackToResults,
-  onNavigateReview
+  onNavigateReview,
+  onGoToPrevious, // Destructure the new prop
+  answers // Destructure answers array
 }: QuizInProgressProps): JSX.Element => {
   const navigate = useNavigate();
   const progress = ((currentQuestionIndex + (reviewMode ? 0 : 1)) / totalQuestions) * 100;
+  // Find the answer previously submitted for this question (if any)
+  const previousAnswer = answers.find(a => a.questionId === currentQuestion.id);
+  const previouslySelectedOptionIndex = previousAnswer?.selectedOptionIndex;
   
   return (
     <div className="max-w-2xl mx-auto">
@@ -73,6 +80,7 @@ export const QuizInProgress = ({
         userAnswer={userAnswer}
         isBookmarked={isBookmarked}
         onBookmarkChange={onBookmarkChange}
+        previouslySelectedOptionIndex={previouslySelectedOptionIndex} // Pass previous selection
       />
       
       {reviewMode && onNavigateReview && (
@@ -91,6 +99,21 @@ export const QuizInProgress = ({
           >
             Next
           </Button>
+        </div>
+      )}
+
+      {/* Navigation for active quiz (Back button) */}
+      {!reviewMode && onGoToPrevious && (
+        <div className="flex justify-start mt-4"> {/* Align left */}
+          <Button
+            onClick={onGoToPrevious}
+            disabled={currentQuestionIndex === 0}
+            variant="outline"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> {/* Add icon */}
+            Back
+          </Button>
+          {/* No "Next" button here, answering progresses */}
         </div>
       )}
     </div>

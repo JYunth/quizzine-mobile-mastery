@@ -167,11 +167,11 @@ export const CreateQuiz = (): JSX.Element => {
       <div className="max-w-4xl mx-auto pb-16">
         <Button 
           variant="ghost" 
-          onClick={() => navigate('/custom-quizzes')} 
+          onClick={() => navigate(-1)} // Use navigate(-1) for generic back
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Custom Quizzes
+          Back
         </Button>
 
         <div className="space-y-6 bg-card p-6 rounded-lg shadow">
@@ -191,9 +191,9 @@ export const CreateQuiz = (): JSX.Element => {
             <span className="text-sm font-medium">
               Selected: {selectedQuestions.length} questions
             </span>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              size="sm"
+              className="bg-yellow-400 text-gray-900 hover:bg-yellow-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-yellow-400"
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="h-4 w-4 mr-2" />

@@ -1,5 +1,5 @@
-
 import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils"; // Import cn for potential future use if needed
 import { Home, BookMarked, BarChart, Settings } from "lucide-react";
 import { 
   Sidebar, 
@@ -20,16 +20,16 @@ export const DesktopSidebar = (): JSX.Element => {
   };
   
   return (
-    <Sidebar className="hidden md:flex">
+    <Sidebar className="hidden md:flex border-r"> {/* Add right border */}
       <SidebarHeader className="p-4">
         <h1 className="text-xl font-bold">Quizzine</h1>
       </SidebarHeader>
       
       <SidebarContent>
-        <SidebarMenu>
+        <SidebarMenu className="space-y-1"> {/* Add vertical space between items */}
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive("/")}>
-              <Link to="/">
+              <Link to="/" className="flex items-center gap-x-3"> {/* Add flex, align, gap */}
                 <Home size={20} />
                 <span>Home</span>
               </Link>
@@ -38,7 +38,7 @@ export const DesktopSidebar = (): JSX.Element => {
           
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive("/bookmarks")}>
-              <Link to="/bookmarks">
+              <Link to="/bookmarks" className="flex items-center gap-x-3"> {/* Add flex, align, gap */}
                 <BookMarked size={20} />
                 <span>Bookmarks</span>
               </Link>
@@ -46,8 +46,8 @@ export const DesktopSidebar = (): JSX.Element => {
           </SidebarMenuItem>
           
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard")}>
-              <Link to="/dashboard">
+            <SidebarMenuButton asChild isActive={isActive("/stats")}>
+              <Link to="/stats" className="flex items-center gap-x-3"> {/* Add flex, align, gap */}
                 <BarChart size={20} />
                 <span>Stats</span>
               </Link>
@@ -56,7 +56,7 @@ export const DesktopSidebar = (): JSX.Element => {
           
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive("/settings")}>
-              <Link to="/settings">
+              <Link to="/settings" className="flex items-center gap-x-3"> {/* Add flex, align, gap */}
                 <Settings size={20} />
                 <span>Settings</span>
               </Link>

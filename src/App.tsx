@@ -4,13 +4,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
-
+import { ThemeProvider } from "./contexts/ThemeContext"; // Import ThemeProvider
+import { useStreak } from "./hooks/useStreak"; // Import the streak hook
 // Import our screens
 import { Home } from "./screens/Home";
 import { Quiz } from "./screens/Quiz";
 import { Bookmarks } from "./screens/Bookmarks";
-import { Dashboard } from "./screens/Dashboard";
+import { Stats } from "./screens/Stats";
 import { Settings } from "./screens/Settings";
 import { CustomQuizzes } from "./screens/CustomQuizzes";
 import { CreateQuiz } from "./pages/CreateQuiz"; // Import the new page
@@ -20,19 +20,16 @@ import { getStorage } from "./lib/storage";
 const queryClient = new QueryClient();
 
 export const App = (): JSX.Element => {
-  // Apply dark mode on initial load if enabled
-  useEffect(() => {
-    const storage = getStorage();
-    if (storage.settings.darkMode) {
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
+  // Call the streak hook to ensure the logic runs on app load
+  useStreak();
 
+  // Theme logic is now handled by ThemeProvider
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner position="top-center" closeButton />
+        <ThemeProvider> {/* Wrap with ThemeProvider */}
+          <Toaster />
+          <Sonner position="top-center" closeButton />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -43,14 +40,15 @@ export const App = (): JSX.Element => {
              {/* General route for modes without week/id (full, smart) */}
             <Route path="/quiz/:mode" element={<Quiz />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/stats" element={<Stats />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/custom-quizzes" element={<CustomQuizzes />} />
             <Route path="/create-quiz" element={<CreateQuiz />} /> 
             <Route path="/edit-quiz/:quizId" element={<CreateQuiz />} /> {/* Add the edit route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
+          </BrowserRouter>
+        </ThemeProvider> {/* Close ThemeProvider */}
       </TooltipProvider>
     </QueryClientProvider>
   );

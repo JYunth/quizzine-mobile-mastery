@@ -1,13 +1,17 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react"; // Added useMemo
 import { PageLayout } from "@/components/PageLayout";
-import { getStorage, updateSettings, exportStorage, importStorage, resetStorage } from "@/lib/storage";
+import { getStorage, updateSettings, exportStorage, importStorage, resetStorage, getCurrentCourseId, setCurrentCourseId } from "@/lib/storage"; // Added course functions
+import { useTheme } from "@/contexts/ThemeContext"; // Import useTheme
+import { useQuestions } from "@/hooks/useQuestions"; // Added useQuestions
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { AppStorage } from "@/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added Select
+import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton
+import { AppStorage, Course } from "@/types"; // Added Course
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -20,40 +24,76 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { DownloadCloud, UploadCloud, RotateCcw, Info } from "lucide-react";
+import { DownloadCloud, UploadCloud, RotateCcw, Info, Mail } from "lucide-react"; // Added Mail icon
 import { AboutModal } from "@/components/AboutModal";
 
 export const Settings = (): JSX.Element => {
-  const [settings, setSettings] = useState<AppStorage["settings"]>({
-    darkMode: false,
-    reminders: false,
-    hardMode: false, // Initialize hardMode state
+  // Use theme context for dark mode
+  const { darkMode, toggleDarkMode } = useTheme();
+  
+  // Local state for other settings (hardMode, etc.)
+  const [otherSettings, setOtherSettings] = useState<Omit<AppStorage["settings"], 'darkMode'>>({
+    reminders: false, // Assuming reminders might still be local or unused
+    hardMode: false,
     lastVisitedWeek: 1,
   });
   const [fileInput, setFileInput] = useState<HTMLInputElement | null>(null);
+  const [currentCourseId, setCurrentCourseState] = useState<string>(getCurrentCourseId()); // Added course state
   
+  // Load other settings (non-dark mode) from storage
   useEffect(() => {
     const storage = getStorage();
-    setSettings(storage.settings);
+    // Exclude darkMode when setting local state
+    const { darkMode: _, ...restSettings } = storage.settings;
+    setOtherSettings(restSettings);
   }, []);
-  
-  const handleToggleDarkMode = (checked: boolean): void => {
-    updateSettings({ darkMode: checked });
-    setSettings({ ...settings, darkMode: checked });
-    
-    if (checked) {
-      document.documentElement.classList.add('dark');
-      toast("Dark mode is enabled");
-    } else {
-      document.documentElement.classList.remove('dark');
-      toast("Dark mode is disabled");
+
+  // Fetch base question data (includes courses) for the dropdown
+  const {
+    data: questionData,
+    isLoading: isLoadingBase, // Consider adding loading/error states to UI if needed
+    isError: isErrorBase,
+  } = useQuestions();
+
+  // Derive courses directly from the base data hook
+  const courses = useMemo(() => questionData?.courses ?? [], [questionData]);
+  const safeCourses = courses ?? []; // Ensure it's always an array
+  const isSuccessCourses = !isLoadingBase && !isErrorBase && !!questionData;
+
+  // Effect to set initial course ID once courses are successfully loaded
+  useEffect(() => {
+    if (isSuccessCourses && safeCourses.length > 0) {
+      const initialCourseId = getCurrentCourseId();
+      if (!safeCourses.some(c => c.id === initialCourseId)) {
+        const fallbackId = safeCourses[0].id;
+        setCurrentCourseState(fallbackId);
+        setCurrentCourseId(fallbackId);
+      } else {
+        setCurrentCourseState(initialCourseId);
+      }
     }
-  };
+  }, [isSuccessCourses, safeCourses]);
   
+  // handleToggleDarkMode is now replaced by toggleDarkMode from useTheme
+  // We can add the toast notification within the context or keep it here if preferred
+  // For simplicity, let's assume the context handles persistence, and we add toast here.
+  const handleToggleDarkModeWithToast = (): void => {
+    toggleDarkMode(); // Call the context function
+    // Toast logic can be added here or potentially moved to the context if desired globally
+    toast(`Dark mode ${!darkMode ? 'enabled' : 'disabled'}`);
+  };
+
   const handleToggleHardMode = (checked: boolean): void => {
-    updateSettings({ hardMode: checked });
-    setSettings({ ...settings, hardMode: checked });
+    updateSettings({ hardMode: checked }); // Persist hardMode change
+    setOtherSettings(prev => ({ ...prev, hardMode: checked })); // Update local state for hardMode
     toast(`Hard mode ${checked ? 'enabled' : 'disabled'}`);
+  };
+
+  const handleCourseChange = (courseId: string): void => {
+    setCurrentCourseState(courseId);
+    setCurrentCourseId(courseId);
+    const courseName = safeCourses.find(c => c.id === courseId)?.name ?? 'Unknown Course';
+    toast(`Switched to ${courseName}`);
   };
   
   const handleExport = (): void => {
@@ -77,14 +117,14 @@ export const Settings = (): JSX.Element => {
         if (success) {
           // Reload settings after import
           const storage = getStorage();
-          setSettings(storage.settings);
-          
-          // Apply dark mode setting
-          if (storage.settings.darkMode) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
+          // Reload *other* settings after import
+          const { darkMode: importedDarkMode, ...restImportedSettings } = storage.settings;
+          setOtherSettings(restImportedSettings);
+          // ThemeProvider will automatically apply the theme based on the updated storage
+          // No need to manually set class here. We might need to trigger a re-read in ThemeProvider
+          // or simply reload the page for simplicity after import.
+          // For now, assume ThemeProvider handles it or a page reload occurs.
+          // If ThemeProvider needs explicit update signal, that's a further enhancement.
           
           toast("Data imported successfully");
         } else {
@@ -104,12 +144,34 @@ export const Settings = (): JSX.Element => {
     resetStorage();
     // Reload settings after reset
     const storage = getStorage();
-    setSettings(storage.settings);
-    
-    // Apply dark mode setting (should be false after reset)
-    document.documentElement.classList.remove('dark');
-    
+    // Reload *other* settings after reset
+    const { darkMode: _, ...restResetSettings } = storage.settings;
+    setOtherSettings(restResetSettings);
+    // ThemeProvider will handle applying the theme based on reset storage.
     toast("All data has been reset");
+  };
+
+  const handleReportBug = (): void => {
+    const recipient = "jyunth28@gmail.com";
+    const subject = "Bug Report - Quizzine Mobile App";
+    const body = `Please describe the bug in detail:
+
+Steps to reproduce:
+
+
+Expected behavior:
+
+
+Actual behavior:
+
+
+Device/OS (Optional):
+
+
+App Version (If known):`;
+
+    const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
   };
   
   return (
@@ -127,11 +189,16 @@ export const Settings = (): JSX.Element => {
                   </p>
                 </div>
                 <Switch 
-                  checked={settings.darkMode} 
-                  onCheckedChange={handleToggleDarkMode}
+                  checked={darkMode} // Use darkMode from context
+                  onCheckedChange={handleToggleDarkModeWithToast} // Use the wrapper or context toggle directly
                 />
               </div>
-              <Separator className="my-4" />
+            </div>
+          </div>
+          
+          <div>
+            <h2 className="text-lg font-medium mb-2">Academic Preferences</h2>
+            <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-medium">Hard Mode</h3>
@@ -139,14 +206,40 @@ export const Settings = (): JSX.Element => {
                     Shuffle options
                   </p>
                 </div>
-                <Switch 
-                  checked={settings.hardMode} 
+                <Switch
+                  checked={otherSettings.hardMode} // Use hardMode from local state
                   onCheckedChange={handleToggleHardMode}
                 />
               </div>
+              <Separator className="my-4" />
+              {/* Course Selection Dropdown */}
+              <div>
+                <h3 className="font-medium mb-2">Selected Course</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Choose the default course for quizzes.
+                </p>
+                {isLoadingBase ? (
+                  <Skeleton className="h-10 w-full max-w-xs" />
+                ) : isErrorBase ? (
+                  <p className="text-sm text-destructive">Error loading courses.</p>
+                ) : (
+                  <Select value={currentCourseId} onValueChange={handleCourseChange}>
+                    <SelectTrigger className="w-full max-w-xs">
+                      <SelectValue placeholder="Select a course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {safeCourses.map(course => (
+                        <SelectItem key={course.id} value={course.id}>
+                          {course.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             </div>
           </div>
-          
+
           <div>
             <h2 className="text-lg font-medium mb-2">Data Management</h2>
             <div className="bg-card rounded-lg border p-4 space-y-4">
@@ -208,6 +301,8 @@ export const Settings = (): JSX.Element => {
             </div>
           </div>
           
+          {/* Support Section Removed */}
+          
           <div>
             <h2 className="text-lg font-medium mb-2">About</h2>
             <div className="bg-card rounded-lg border p-4">
@@ -226,6 +321,20 @@ export const Settings = (): JSX.Element => {
                     </Button>
                   }
                 />
+              </div>
+              <Separator className="my-4" />
+              {/* Report a Bug - Moved into About section */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">Report a Bug</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Found an issue? Let me know via email.
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleReportBug}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Report Bug
+                </Button>
               </div>
             </div>
           </div>

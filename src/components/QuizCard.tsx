@@ -13,6 +13,7 @@ interface QuizCardProps {
   userAnswer?: number;
   isBookmarked: boolean;
   onBookmarkChange?: (isBookmarked: boolean) => void;
+  previouslySelectedOptionIndex?: number; // Add prop for previous selection
 }
 
 export const QuizCard = ({
@@ -20,20 +21,31 @@ export const QuizCard = ({
   onAnswer,
   userAnswer,
   isBookmarked,
-  onBookmarkChange
+  onBookmarkChange,
+  previouslySelectedOptionIndex // Destructure the new prop
 }: QuizCardProps): JSX.Element => {
-  const [selectedOption, setSelectedOption] = useState<number | null>(userAnswer !== undefined ? userAnswer : null);
+  // Initialize with previous selection if available, otherwise review answer, else null
+  const [selectedOption, setSelectedOption] = useState<number | null>(
+    previouslySelectedOptionIndex !== undefined ? previouslySelectedOptionIndex : (userAnswer !== undefined ? userAnswer : null)
+  );
   const [startTime, setStartTime] = useState<number>(Date.now());
   
   // Reset selected option when question changes
+  // Reset/update selected option when question changes or props update
   useEffect(() => {
-    if (userAnswer !== undefined) {
+    // Prioritize previously selected answer if available (when navigating back)
+    if (previouslySelectedOptionIndex !== undefined) {
+      setSelectedOption(previouslySelectedOptionIndex);
+      // Don't reset startTime here, user might have started before navigating away
+    } else if (userAnswer !== undefined) {
+      // If in review mode, show the user's final answer for this question
       setSelectedOption(userAnswer);
     } else {
+      // Otherwise (new question or no previous answer), reset selection and timer
       setSelectedOption(null);
       setStartTime(Date.now());
     }
-  }, [question.id, userAnswer]);
+  }, [question.id, userAnswer, previouslySelectedOptionIndex]); // Add dependency
   
   const handleOptionSelect = (index: number): void => {
     if (userAnswer !== undefined) return; // Don't allow changing if in review mode

@@ -1,8 +1,9 @@
 
-import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
-import { Answer, Question, QuizMode, Course } from "@/types"; // Added Course type if needed later
-import { useQuestions } from "@/hooks/useQuestions"; // Import the main question hook
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Answer, Question, QuizMode, Course } from "@/types";
+import { useQuestions } from "@/hooks/useQuestions";
+import { useStreak } from '@/hooks/useStreak'; // Import useStreak
 import {
   getStorage,
   getAllQuestions, // Keep storage functions
@@ -37,6 +38,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
   handleReviewQuiz: () => void;
   handleBackToResults: () => void;
   navigateReview: (direction: 'next' | 'prev') => void;
+  goToPreviousQuestion: () => void; // Add function to return type
 } {
   // Local state for quiz progress and UI
   const [questions, setQuestions] = useState<Question[]>([]); // Holds the potentially shuffled questions for the current quiz instance
@@ -45,8 +47,10 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
   const [showResults, setShowResults] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
   const [currentBookmarked, setCurrentBookmarked] = useState(false);
-  const [displayQuestion, setDisplayQuestion] = useState<Question | null>(null); // State for current question with potentially shuffled options
-  
+  const [displayQuestion, setDisplayQuestion] = useState<Question | null>(null);
+
+  // Instantiate the streak hook
+  const { recordActivity } = useStreak();
   const currentCourseId = getCurrentCourseId(); // Needed for query key consistency
 
   // Fetch base question data using the main hook
@@ -184,21 +188,36 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
     saveConfidenceRating(displayQuestion.id, newRating);
     // --- End Confidence Rating Calculation ---
 
-    setAnswers([...answers, finalAnswer]); // Add the processed answer
+    // Record the activity for streak calculation *after* processing the answer
+    recordActivity();
+
+    // Check if an answer for this question already exists
+    const existingAnswerIndex = answers.findIndex(a => a.questionId === finalAnswer.questionId);
+    let updatedAnswers;
+
+    if (existingAnswerIndex > -1) {
+      // Update existing answer
+      updatedAnswers = answers.map((ans, index) =>
+        index === existingAnswerIndex ? finalAnswer : ans
+      );
+    } else {
+      // Append new answer
+      updatedAnswers = [...answers, finalAnswer];
+    }
+
+    setAnswers(updatedAnswers); // Set the updated state
     
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Pass the final answer to finishQuiz when it's the last question
-      finishQuiz(finalAnswer); 
+      // Pass the complete, updated list of answers to finishQuiz
+      finishQuiz(updatedAnswers);
     }
   };
   
-  // Accept the last answer as a parameter
-  const finishQuiz = (lastAnswer: Answer): void => {
-    // Correctly construct the final list using the state *before* the last answer 
-    // and the lastAnswer object passed in.
-    const finalAnswersList = [...answers, lastAnswer]; 
+  // Accept the final, complete list of answers
+  const finishQuiz = (finalAnswersList: Answer[]): void => {
+    // Now directly use the passed list which is guaranteed to be correct
     
     const attempt = {
       id: Date.now().toString(),
@@ -249,6 +268,13 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
+
+  // Function to navigate to the previous question during the quiz
+  const goToPreviousQuestion = (): void => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
   
   return {
     loading: isLoadingBaseQuestions || isLoadingFiltered, // Combine loading states
@@ -264,6 +290,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
     handleRetryIncorrect,
     handleReviewQuiz,
     handleBackToResults,
-    navigateReview
+    navigateReview,
+    goToPreviousQuestion // Expose the new function
   };
 }

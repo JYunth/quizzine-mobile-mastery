@@ -1,4 +1,3 @@
-
 import { getStorage, getCurrentCourseId } from "@/lib/storage"; // Import getCurrentCourseId
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge"; // Import Badge
@@ -52,16 +51,35 @@ export const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProp
   return (
     <Link to={`/quiz/weekly/${week}`}>
       <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
-        <CardContent className="p-4">
-          <div className="flex flex-col">
-            <h3 className="text-lg font-semibold mb-1">
+        {/* Make CardContent a flex container, ensure it fills the Card height */}
+        <CardContent className="p-4 flex flex-col h-full">
+          {/* Top section: Title and Badge */}
+          <div>
+            {/* Apply line-clamp for consistent height and overflow handling */}
+            <h3 className="text-lg font-semibold mb-1 line-clamp-2">
               {weekTitle ? `Week ${week} - ${weekTitle}` : `Week ${week}`}
             </h3>
-            {/* Replace span with Badge component */}
-            <Badge variant={badgeVariant} className="self-start mb-3">{status}</Badge>
+            <Badge variant={badgeVariant} className="self-start">{status}</Badge>
           </div>
 
-          <div className="mt-1">
+          {/* Middle section: Tags (takes up remaining space) */}
+          {tags && tags.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-1 flex-grow"> {/* Use flex-grow here */}
+              {tags.map((tag, index) => (
+                <span 
+                  key={index} 
+                  className="text-xs bg-secondary px-2 py-1 rounded-full self-start" // Align tags nicely
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="flex-grow"></div>
+          )}
+
+          {/* Bottom section: Progress Bar */}
+          <div className="mt-3 pt-2 border-t border-border/20"> {/* Add margin-top and subtle border */}
             <div className="w-full bg-secondary rounded-full h-2">
               <div 
                 className="bg-primary rounded-full h-2" 
@@ -72,19 +90,6 @@ export const WeekCard = ({ week, questionsCount, tags, weekTitle }: WeekCardProp
               {bestScore} of {questionsCount} questions correct {/* Use bestScore */}
             </p>
           </div>
-          
-          {tags && tags.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1">
-              {tags.map((tag, index) => (
-                <span 
-                  key={index} 
-                  className="text-xs bg-secondary px-2 py-1 rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
     </Link>
