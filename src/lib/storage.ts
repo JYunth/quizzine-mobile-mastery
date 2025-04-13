@@ -1,5 +1,5 @@
 import { AppStorage, Question, QuizAttempt, CustomQuiz, Course } from "@/types";
-import { getUTCTodayTimestamp, isSameUTCDay, isYesterdayUTC } from "@/lib/utils";
+import { formatDateToYYYYMMDD, getLocalDateYYYYMMDD } from "@/lib/utils"; // Import new utils
 // Removed unused import from deleted questionStore
 
 const STORAGE_KEY = 'quizzineApp';
@@ -17,8 +17,8 @@ const initialStorage: AppStorage = {
   },
   confidenceRatings: {},
   streaks: {
-    lastActiveTimestamp: 0, // Initialize to 0 (no activity yet)
-    currentStreak: 0,       // Initialize to 0
+    lastActivityDate: '', // Initialize to empty string (no activity yet)
+    currentStreak: 0,     // Initialize to 0
   },
   customQuizzes: [],
 };
@@ -31,64 +31,75 @@ export const getStorage = (): AppStorage => {
     if (!data) {
       console.log("No existing storage found, initializing.");
       storage = { ...initialStorage }; // Use a copy
-      // Initialize timestamp properly if starting fresh
-      storage.streaks.lastActiveTimestamp = 0; // Explicitly set to 0
-      storage.streaks.currentStreak = 0;       // Explicitly set to 0
+      // Initialize date properly if starting fresh
+      storage.streaks.lastActivityDate = ''; // Explicitly set to empty string
+      storage.streaks.currentStreak = 0;     // Explicitly set to 0
       saveStorage(storage); // Save initial state if none exists
       return storage;
     }
 
     storage = JSON.parse(data);
 
-    // --- Migration Logic ---
-    if (storage.streaks && typeof (storage.streaks as any).lastActive === 'string') {
-      console.warn("Migrating old streak 'lastActive' string to 'lastActiveTimestamp'.");
-      const oldDateString = (storage.streaks as any).lastActive;
-      const date = new Date(oldDateString + 'T00:00:00Z'); // Assume YYYY-MM-DD was UTC
-
-      if (!isNaN(date.getTime())) {
-        date.setUTCHours(0, 0, 0, 0); // Ensure it's the start of the day in UTC
-        storage.streaks.lastActiveTimestamp = date.getTime();
-      } else {
-        console.error("Failed to parse old lastActive date string during migration:", oldDateString);
-        storage.streaks.lastActiveTimestamp = 0; // Fallback
+    // --- Migration & Validation Logic for Streaks ---
+    let needsSaveAfterMigration = false;
+    if (!storage.streaks) {
+      // If streaks object itself is missing, initialize it
+      console.warn("Streaks object missing, initializing.");
+      storage.streaks = { ...initialStorage.streaks }; // Uses { lastActivityDate: '', currentStreak: 0 }
+      needsSaveAfterMigration = true;
+    } else {
+      // Check for old timestamp format and migrate if necessary
+      if (typeof (storage.streaks as any).lastActiveTimestamp === 'number') {
+        console.warn("Migrating old 'lastActiveTimestamp' to 'lastActivityDate'.");
+        const timestamp = (storage.streaks as any).lastActiveTimestamp;
+        if (timestamp > 0) {
+          try {
+            const date = new Date(timestamp);
+            storage.streaks.lastActivityDate = formatDateToYYYYMMDD(date); // Convert to local YYYY-MM-DD
+            // If migrating from an active timestamp, ensure streak is at least 1
+            if (typeof storage.streaks.currentStreak !== 'number' || isNaN(storage.streaks.currentStreak) || storage.streaks.currentStreak < 1) {
+               storage.streaks.currentStreak = 1;
+            }
+          } catch (e) {
+             console.error("Error converting timestamp during migration, resetting streak:", e);
+             storage.streaks.lastActivityDate = '';
+             storage.streaks.currentStreak = 0;
+          }
+        } else {
+          // If timestamp was 0 or invalid, initialize properly
+          storage.streaks.lastActivityDate = '';
+          storage.streaks.currentStreak = 0;
+        }
+        delete (storage.streaks as any).lastActiveTimestamp; // Remove old property
+        needsSaveAfterMigration = true;
       }
-      delete (storage.streaks as any).lastActive; // Remove old property
 
-      // Ensure currentStreak is a number, default to 1 if migrating from an active state
+      // Validate current structure
+      if (typeof storage.streaks.lastActivityDate !== 'string') {
+        console.warn("lastActivityDate missing or invalid, initializing.");
+        storage.streaks.lastActivityDate = '';
+        storage.streaks.currentStreak = 0; // Reset streak too if date is invalid
+        needsSaveAfterMigration = true;
+      }
       if (typeof storage.streaks.currentStreak !== 'number' || isNaN(storage.streaks.currentStreak)) {
-         storage.streaks.currentStreak = storage.streaks.lastActiveTimestamp > 0 ? 1 : 0;
-      }
-      // Save migrated data immediately
-      saveStorage(storage);
-
-    } else if (!storage.streaks) {
-        // If streaks object itself is missing, initialize it
-        console.warn("Streaks object missing, initializing.");
-        storage.streaks = { ...initialStorage.streaks };
-        saveStorage(storage);
-    } else if (typeof storage.streaks.lastActiveTimestamp !== 'number') {
-        // If timestamp is missing or not a number, initialize it
-        console.warn("lastActiveTimestamp missing or invalid, initializing.");
-        storage.streaks.lastActiveTimestamp = 0;
-        storage.streaks.currentStreak = 0; // Reset streak too
-        saveStorage(storage);
-    } else if (typeof storage.streaks.currentStreak !== 'number') {
-        // If streak is missing or not a number, initialize it
         console.warn("currentStreak missing or invalid, initializing.");
-        storage.streaks.currentStreak = 0;
-        saveStorage(storage);
+        // Preserve lastActivityDate if it's valid, otherwise reset streak
+        storage.streaks.currentStreak = storage.streaks.lastActivityDate ? 1 : 0;
+        needsSaveAfterMigration = true;
+      }
     }
-    // --- End Migration Logic ---
+
+    if (needsSaveAfterMigration) {
+      saveStorage(storage); // Save migrated/validated data immediately
+    }
+    // --- End Migration & Validation Logic ---
 
     return storage;
 
   } catch (error) {
     console.error('Failed to parse or migrate storage, resetting to initial state.', error);
     // If parsing or migration fails catastrophically, reset to initial
-    storage = { ...initialStorage };
-    storage.streaks.lastActiveTimestamp = 0;
-    storage.streaks.currentStreak = 0;
+    storage = { ...initialStorage }; // Resets to { lastActivityDate: '', currentStreak: 0 }
     saveStorage(storage);
     return storage;
   }
@@ -134,40 +145,7 @@ export const importStorage = (jsonString: string): boolean => {
   }
 };
 
-/**
- * Updates the user's activity streak based on UTC days.
- * Should be called once per app session, ideally on load.
- */
-export const updateStreak = (): void => {
-  const storage = getStorage();
-  const todayTimestamp = getUTCTodayTimestamp();
-  const lastActiveTimestamp = storage.streaks.lastActiveTimestamp || 0; // Default to 0 if undefined
-
-  // 1. Check if already updated today
-  if (isSameUTCDay(lastActiveTimestamp, todayTimestamp)) {
-    // console.log("Streak already updated today.");
-    return; // No need to update again
-  }
-
-  // 2. Check if last active was yesterday (UTC)
-  if (isYesterdayUTC(lastActiveTimestamp, todayTimestamp)) {
-    // console.log("Continuing streak!");
-    storage.streaks.currentStreak = (storage.streaks.currentStreak || 0) + 1; // Increment
-  }
-  // 3. Check if last active was before yesterday (streak broken)
-  else {
-    // console.log("Streak broken or first activity.");
-    storage.streaks.currentStreak = 1; // Reset to 1 (for today's activity)
-  }
-
-  // 4. Update the last active timestamp to today
-  storage.streaks.lastActiveTimestamp = todayTimestamp;
-
-  // 5. Save the updated storage
-  saveStorage(storage);
-  // console.log("Streak updated:", storage.streaks);
-};
-
+// Removed the old updateStreak function. Logic moved to useStreak hook.
 // Save quiz attempt
 export const saveQuizAttempt = (attempt: QuizAttempt): void => {
   const storage = getStorage();

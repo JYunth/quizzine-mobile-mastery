@@ -1,8 +1,9 @@
 
-import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
-import { Answer, Question, QuizMode, Course } from "@/types"; // Added Course type if needed later
-import { useQuestions } from "@/hooks/useQuestions"; // Import the main question hook
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Answer, Question, QuizMode, Course } from "@/types";
+import { useQuestions } from "@/hooks/useQuestions";
+import { useStreak } from '@/hooks/useStreak'; // Import useStreak
 import {
   getStorage,
   getAllQuestions, // Keep storage functions
@@ -45,8 +46,10 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
   const [showResults, setShowResults] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
   const [currentBookmarked, setCurrentBookmarked] = useState(false);
-  const [displayQuestion, setDisplayQuestion] = useState<Question | null>(null); // State for current question with potentially shuffled options
-  
+  const [displayQuestion, setDisplayQuestion] = useState<Question | null>(null);
+
+  // Instantiate the streak hook
+  const { recordActivity } = useStreak();
   const currentCourseId = getCurrentCourseId(); // Needed for query key consistency
 
   // Fetch base question data using the main hook
@@ -183,6 +186,9 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
     // Save the updated rating (no need to await, it's synchronous localStorage)
     saveConfidenceRating(displayQuestion.id, newRating);
     // --- End Confidence Rating Calculation ---
+
+    // Record the activity for streak calculation *after* processing the answer
+    recordActivity();
 
     setAnswers([...answers, finalAnswer]); // Add the processed answer
     

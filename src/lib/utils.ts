@@ -53,3 +53,52 @@ export function isYesterdayUTC(timestampToCheck: number, todayTimestamp: number)
   const yesterdayTimestamp = todayTimestamp - 24 * 60 * 60 * 1000; // Subtract one day's worth of milliseconds
   return isSameUTCDay(timestampToCheck, yesterdayTimestamp);
 }
+
+/**
+ * Formats a Date object into a YYYY-MM-DD string based on local time.
+ * @param date - The Date object to format.
+ * @returns {string} The date string in YYYY-MM-DD format.
+ */
+export function formatDateToYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Gets the current date formatted as YYYY-MM-DD based on local time.
+ * @returns {string} The current date string in YYYY-MM-DD format.
+ */
+export function getLocalDateYYYYMMDD(): string {
+  return formatDateToYYYYMMDD(new Date());
+}
+
+/**
+ * Calculates the difference in days between two YYYY-MM-DD date strings.
+ * Assumes the dates are in local time.
+ * @param dateStr1 - The first date string (YYYY-MM-DD).
+ * @param dateStr2 - The second date string (YYYY-MM-DD).
+ * @returns {number} The difference in days (dateStr2 - dateStr1). Returns NaN if parsing fails.
+ */
+export function diffDaysYYYYMMDD(dateStr1: string, dateStr2: string): number {
+  try {
+    // Parse as local time by appending a time component (avoids UTC conversion issues)
+    const date1 = new Date(`${dateStr1}T00:00:00`);
+    const date2 = new Date(`${dateStr2}T00:00:00`);
+
+    // Ensure dates are valid
+    if (isNaN(date1.getTime()) || isNaN(date2.getTime())) {
+      console.error("Invalid date string provided to diffDaysYYYYMMDD:", dateStr1, dateStr2);
+      return NaN;
+    }
+
+    // Calculate the difference in milliseconds and convert to days
+    const diffTime = date2.getTime() - date1.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); // Use Math.round for robustness near DST changes
+    return diffDays;
+  } catch (error) {
+    console.error("Error calculating day difference:", error);
+    return NaN;
+  }
+}

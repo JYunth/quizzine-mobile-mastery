@@ -1,10 +1,11 @@
 
 import { useMemo } from "react"; // Removed useEffect, useState
 import { useQuery } from "@tanstack/react-query";
-import { useQuestions } from "@/hooks/useQuestions"; // Import useQuestions
+import { useQuestions } from "@/hooks/useQuestions";
 import { PageLayout } from "@/components/PageLayout";
-import { getAllQuestions, getStorage, getCurrentCourseId } from "@/lib/storage"; // Removed updateStreak, setCurrentCourseId, getAllCourses
-import { Question } from "@/types"; // Removed Course
+import { getAllQuestions, getCurrentCourseId } from "@/lib/storage"; // Removed getStorage for streak
+import { Question } from "@/types";
+import { useStreak } from "@/hooks/useStreak"; // Import useStreak
 import { WeekCard } from "@/components/WeekCard";
 import { ActionCard } from "@/components/ActionCard";
 import { Brain, Zap, ListChecks } from "lucide-react";
@@ -52,10 +53,8 @@ export const Home = (): JSX.Element => {
   });
   const safeCourseQuestions = courseQuestions ?? []; // Ensure it's always an array
 
-  // Removed useEffect for streak update (now handled by useStreak in App.tsx)
-
-  // Read the current streak directly from storage for display
-  const currentStreak = getStorage().streaks.currentStreak || 0;
+  // Use the streak hook to get the current count
+  const { streakCount } = useStreak();
 
   // Memoize the calculation of week data
   const weekData = useMemo(() => {
@@ -96,15 +95,15 @@ export const Home = (): JSX.Element => {
             <div>
               <h2 className="font-semibold text-xl">Welcome back!</h2>
               <p className="text-sm text-muted-foreground">
-                {currentStreak > 1
-                  ? `You're on a ${currentStreak}-day streak. Keep it up!`
-                  : currentStreak === 1
+                {streakCount > 1
+                  ? `You're on a ${streakCount}-day streak. Keep it up!`
+                  : streakCount === 1
                   ? "You're on a 1-day streak. Keep it going!"
                   : "Start your learning streak today!"}
               </p>
             </div>
             <div className="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center font-bold">
-              {currentStreak}
+              {streakCount}
             </div>
           </div>
         </div>
