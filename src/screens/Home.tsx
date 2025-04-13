@@ -1,58 +1,63 @@
 
-import { useEffect, useState, useMemo } from "react"; // Added useMemo
+import { useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
 import { getAllQuestions, getStorage, updateStreak, getAllCourses, getCurrentCourseId, setCurrentCourseId } from "@/lib/storage";
 import { Course, Question } from "@/types";
-import { WeekCard } from "@/components/WeekCard"; // Assuming WeekCard is not memoized, we might need React.memo later
+import { WeekCard } from "@/components/WeekCard";
 import { ActionCard } from "@/components/ActionCard";
 import { Brain, Zap, ListChecks } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
 
 export const Home = (): JSX.Element => {
-  const [questions, setQuestions] = useState<Question[]>([]); // Questions for the current course
+  // Local state for UI interaction
   const [streak, setStreak] = useState(0);
-  const [courses, setCourses] = useState<Course[]>([]);
   const [currentCourseId, setCurrentCourseState] = useState<string>(getCurrentCourseId());
-  const [loading, setLoading] = useState(true); // Add loading state
 
-  // Load courses once on mount
+  // Fetch courses using TanStack Query
+  const { data: courses = [], isLoading: isLoadingCourses, isSuccess: isSuccessCourses, isError: isErrorCourses } = useQuery<Course[]>({
+    queryKey: ['courses'],
+    queryFn: getAllCourses,
+    staleTime: Infinity, // Courses are static, cache indefinitely
+  });
+
+  // Effect to set initial course ID once courses are successfully loaded
   useEffect(() => {
-    const loadInitialCourses = async () => {
-      const allCourses = await getAllCourses();
-      setCourses(allCourses);
-      // Ensure currentCourseId is valid, fallback if needed
+    if (isSuccessCourses && courses.length > 0) {
       const initialCourseId = getCurrentCourseId();
-      if (!allCourses.some(c => c.id === initialCourseId)) {
-        const fallbackId = allCourses[0]?.id || '';
+      // Check if the currently stored course ID exists in the loaded courses
+      if (!courses.some(c => c.id === initialCourseId)) {
+        // If not valid, use the first course as a fallback
+        const fallbackId = courses[0].id;
         setCurrentCourseState(fallbackId);
-        setCurrentCourseId(fallbackId); // Persist fallback if needed
-      }
-    };
-    loadInitialCourses();
-  }, []);
-
-  // Load questions whenever the current course changes
-  useEffect(() => {
-    const loadCourseData = async () => {
-      setLoading(true);
-      if (currentCourseId) { // Only load if a course is selected
-        const courseQuestions = await getAllQuestions(); // This now gets questions for the current course from cache
-        setQuestions(courseQuestions);
+        setCurrentCourseId(fallbackId); // Persist the fallback ID
       } else {
-        setQuestions([]); // Clear questions if no course selected
+        // If valid, ensure the local state matches the persisted one
+        setCurrentCourseState(initialCourseId);
       }
-      setLoading(false);
-    };
+    }
+    // Only run when courses are successfully loaded or the success status changes
+  }, [isSuccessCourses, courses]);
 
-    loadCourseData();
+  // Fetch questions for the selected course using TanStack Query
+  const { data: questions = [], isLoading: isLoadingQuestions, isError: isErrorQuestions } = useQuery<Question[]>({
+    // Query key includes the course ID to refetch when it changes
+    queryKey: ['questions', currentCourseId],
+    // The query function `getAllQuestions` implicitly uses the currentCourseId from storage
+    queryFn: getAllQuestions,
+    // Only run the query if a course ID is selected
+    enabled: !!currentCourseId && isSuccessCourses, // Enable only when a course is selected and courses have successfully loaded
+    staleTime: 1000 * 60 * 5, // Cache questions for 5 minutes
+  });
 
-    // Load streak info (can be done independently or here)
+  // Effect for streak (remains unchanged as it uses localStorage)
+  useEffect(() => {
     const storage = getStorage();
     setStreak(storage.streaks.currentStreak);
     updateStreak(); // Update streak for today
-
-  }, [currentCourseId]);
+  }, []); // Run once on mount
 
   // Memoize the calculation of week data
   const weekData = useMemo(() => {
@@ -77,7 +82,9 @@ export const Home = (): JSX.Element => {
   const handleCourseChange = (courseId: string) => {
     setCurrentCourseState(courseId);
     setCurrentCourseId(courseId);
-    toast(`Switched to ${courses.find(c => c.id === courseId)?.name}`);
+    // Ensure courses is treated as an array before calling find
+    const courseName = Array.isArray(courses) ? courses.find(c => c.id === courseId)?.name : 'Unknown Course';
+    toast(`Switched to ${courseName}`);
   };
   
   // Get unique weeks and sort them from the memoized data
@@ -94,7 +101,7 @@ export const Home = (): JSX.Element => {
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
               <SelectContent>
-                {courses.map(course => (
+                {Array.isArray(courses) && courses.map(course => (
                   <SelectItem key={course.id} value={course.id}>
                     {course.name}
                   </SelectItem>
@@ -146,22 +153,24 @@ export const Home = (): JSX.Element => {
         </div>
         
         <h2 className="font-semibold text-xl mb-4">Weeks</h2>
-        {loading ? (
-           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-             {/* Placeholder skeletons */}
-             {[1, 2, 3].map(i => (
-               <div key={i} className="p-4 border rounded-lg">
-                 <div className="h-6 bg-muted rounded w-1/4 mb-2"></div>
-                 <div className="h-4 bg-muted rounded w-1/2 mb-3"></div>
-                 <div className="flex flex-wrap gap-1">
-                   <div className="h-5 bg-muted rounded w-10"></div>
-                   <div className="h-5 bg-muted rounded w-12"></div>
-                 </div>
-               </div>
-             ))}
-           </div>
+        {isLoadingCourses || isLoadingQuestions ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {/* Placeholder skeletons */}
+            {[1, 2, 3].map(i => (
+              <div key={i} className="p-4 border rounded-lg space-y-2">
+                <Skeleton className="h-6 w-1/4" />
+                <Skeleton className="h-4 w-3/4" />
+                <div className="flex flex-wrap gap-1 pt-1">
+                  <Skeleton className="h-5 w-10" />
+                  <Skeleton className="h-5 w-12" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : isErrorCourses || isErrorQuestions ? (
+           <p className="text-destructive text-center py-4">Error loading data. Please try again later.</p>
         ) : weeks.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4">No weeks found for this course.</p>
+           <p className="text-muted-foreground text-center py-4">No weeks found for this course.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {weeks.map(week => {

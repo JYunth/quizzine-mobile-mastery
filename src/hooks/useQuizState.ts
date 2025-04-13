@@ -1,8 +1,9 @@
 
-import { useState, useEffect, useMemo } from "react"; // Import useMemo
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
 import { Answer, Question, QuizMode } from "@/types";
-import { 
-  getStorage, // Import getStorage
+import {
+  getStorage,
   getAllQuestions,
   getBookmarkedQuestions,
   getQuestionsForWeek,
@@ -11,8 +12,7 @@ import {
   getQuestionsForCustomQuiz,
   shuffleArray,
   isBookmarked,
-  // getStorage, // Import getStorage <-- Removed duplicate
-  saveConfidenceRating // Import saveConfidenceRating
+  saveConfidenceRating
 } from "@/lib/storage";
 
 interface UseQuizStateProps {
@@ -37,8 +37,8 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
   handleBackToResults: () => void;
   navigateReview: (direction: 'next' | 'prev') => void;
 } {
-  const [loading, setLoading] = useState(true);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  // Local state for quiz progress and UI
+  const [questions, setQuestions] = useState<Question[]>([]); // Holds the potentially shuffled questions for the current quiz instance
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -46,73 +46,55 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
   const [currentBookmarked, setCurrentBookmarked] = useState(false);
   const [displayQuestion, setDisplayQuestion] = useState<Question | null>(null); // State for current question with potentially shuffled options
   
-  // Load questions based on the mode
-  useEffect(() => {
-    // console.log(`useQuizState: useEffect triggered. mode=${mode}, week=${week}, id=${id}`); // Removed log
-    const loadQuestions = async (): Promise<void> => {
-      // console.log("useQuizState: loadQuestions async function started."); // Removed log
-      setLoading(true);
-      
-      let loadedQuestions: Question[] = [];
-      
-      try { 
-        // console.log("useQuizState: Entering try block."); // Removed log
-        switch(mode) {
+  const currentCourseId = getCurrentCourseId(); // Needed for query key consistency
+
+  // Fetch questions using TanStack Query based on mode, week, id
+  const { data: fetchedQuestions = [], isLoading, isError } = useQuery<Question[]>({
+    queryKey: ['quizQuestions', mode, week, id, currentCourseId], // Dynamic query key
+    queryFn: async () => {
+      switch(mode) {
         case 'weekly':
-          // console.log("useQuizState: Case 'weekly' entered."); // Removed log
-          if (!week) {
-            // console.warn("useQuizState: Weekly mode but no week provided."); // Removed log
-            setQuestions([]);
-            setLoading(false);
-            return;
-          }
-          // console.log(`useQuizState: Calling getQuestionsForWeek with week: ${week}`); // Removed log
-          loadedQuestions = await getQuestionsForWeek(parseInt(week));
-          break;
+          if (!week) throw new Error("Week parameter is required for weekly quiz mode.");
+          return getQuestionsForWeek(parseInt(week));
         case 'full':
-          loadedQuestions = await getAllQuestions();
-          break;
+          return getAllQuestions(); // Gets questions for the current course
         case 'bookmark':
-          loadedQuestions = await getBookmarkedQuestions();
-          break;
+          return getBookmarkedQuestions();
         case 'smart':
-          loadedQuestions = await getSmartBoostQuestions(); // Removed argument
-          break;
-          case 'custom':
-            if (!id) {
-              // console.warn("useQuizState: Custom mode but no ID provided."); // Removed log
-              setQuestions([]); // Ensure state is cleared
-              setLoading(false); // Ensure loading stops
-              return; 
-            }
-            // console.log(`useQuizState: Loading custom quiz with ID: ${id}`); // Removed log
-            loadedQuestions = await getQuestionsForCustomQuiz(id);
-            // console.log(`useQuizState: Loaded ${loadedQuestions.length} questions for custom quiz ${id}`); // Removed log
-            break;
-        }
-        
-        // Check settings to decide whether to shuffle question order
-        const { settings } = getStorage();
-        if (settings.hardMode) {
-          // console.log("useQuizState: Hard mode ON - Shuffling question order."); // Optional log
-          const shuffled = shuffleArray(loadedQuestions);
-          setQuestions(shuffled);
-        } else {
-          // console.log("useQuizState: Hard mode OFF - Using original question order."); // Optional log
-          setQuestions(loadedQuestions); // Use original order if hard mode is off
-        }
-        
-        // console.log("useQuizState: Setting loading to false."); // Removed log
-        setLoading(false);
-      } catch (error) {
-        console.error("useQuizState: Error loading questions:", error); // Keep error log
-        setQuestions([]); // Clear questions on error
-        setLoading(false); // Ensure loading is set to false even on error
+          return getSmartBoostQuestions();
+        case 'custom':
+          if (!id) throw new Error("ID parameter is required for custom quiz mode.");
+          return getQuestionsForCustomQuiz(id);
+        default:
+          console.warn(`Unknown quiz mode: ${mode}`);
+          return []; // Return empty for unknown modes
       }
-    };
+    },
+    enabled: (mode === 'weekly' && !!week) || (mode === 'custom' && !!id) || ['full', 'bookmark', 'smart'].includes(mode), // Enable based on mode requirements
+    staleTime: 1000 * 60, // Cache for 1 minute
+    retry: 1, // Retry once on error
+  });
+
+  // Effect to process fetched questions (e.g., shuffling for hard mode)
+  useEffect(() => {
+    if (isLoading || isError) {
+      setQuestions([]); // Clear local questions if loading or error
+      return;
+    }
     
-    loadQuestions();
-  }, [mode, week, id]); // Dependencies remain the same
+    const { settings } = getStorage();
+    if (settings.hardMode) {
+      setQuestions(shuffleArray(fetchedQuestions));
+    } else {
+      setQuestions(fetchedQuestions);
+    }
+    // Reset quiz state when questions change (e.g., mode switch)
+    setCurrentQuestionIndex(0);
+    setAnswers([]);
+    setShowResults(false);
+    setReviewMode(false);
+
+  }, [fetchedQuestions, isLoading, isError]); // Depend on fetched data and loading/error state
   
   // Effect to prepare the question for display (shuffle options if hard mode is on)
   useEffect(() => {
@@ -245,7 +227,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
   };
   
   return {
-    loading,
+    loading: isLoading, // Use isLoading from useQuery
     questions,
     currentQuestionIndex,
     answers,

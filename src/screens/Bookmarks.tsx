@@ -1,6 +1,7 @@
-import { useEffect, useState, useMemo } from "react"; // Added useMemo
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
-import { getBookmarkedQuestions, isBookmarked, toggleBookmark } from "@/lib/storage";
+import { getBookmarkedQuestions, toggleBookmark } from "@/lib/storage";
 import { Question } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bookmark, Search } from "lucide-react";
@@ -9,28 +10,49 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 
 export const Bookmarks = (): JSX.Element => {
-  const [bookmarks, setBookmarks] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Local state for UI filters
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
-  
-  useEffect(() => {
-    const loadBookmarks = async () => {
-      setLoading(true);
-      const questions = await getBookmarkedQuestions();
-      setBookmarks(questions);
-      setLoading(false);
-    };
-    
-    loadBookmarks();
-  }, []);
+
+  const queryClient = useQueryClient();
+
+  // Fetch bookmarked questions using TanStack Query
+  const { data: bookmarks = [], isLoading, isError } = useQuery<Question[]>({
+    queryKey: ['bookmarks'],
+    queryFn: getBookmarkedQuestions,
+    staleTime: 1000 * 60, // Cache for 1 minute, refetch on window focus etc.
+  });
+
+  // Mutation for toggling bookmarks
+  const { mutate: toggleBookmarkMutation } = useMutation({
+    mutationFn: toggleBookmark,
+    onSuccess: (isNowBookmarked, questionId) => {
+      // Invalidate the bookmarks query to refetch the list
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      toast(isNowBookmarked ? "Bookmark added" : "Bookmark removed");
+
+      // Optional: Optimistic update (more complex, skipped for now)
+      // queryClient.setQueryData(['bookmarks'], (oldData: Question[] | undefined) => {
+      //   if (!oldData) return [];
+      //   return isNowBookmarked
+      //     ? [...oldData, /* need full question object here */ ]
+      //     : oldData.filter(q => q.id !== questionId);
+      // });
+    },
+    onError: (error) => {
+      console.error("Failed to toggle bookmark:", error);
+      toast.error("Failed to update bookmark. Please try again.");
+      // Invalidate to ensure consistency if optimistic update was used
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+    },
+  });
   
   const handleRemoveBookmark = (questionId: string) => {
-    toggleBookmark(questionId);
-    setBookmarks(bookmarks.filter(b => b.id !== questionId));
-    toast("Bookmark removed");
+    // Call the mutation
+    toggleBookmarkMutation(questionId);
   };
   
   // Memoize unique weeks for filter
@@ -95,11 +117,27 @@ export const Bookmarks = (): JSX.Element => {
           </div>
         </div>
         
-        {loading ? (
-          <div className="text-center py-10">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="mt-4">Loading bookmarks...</p>
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <Card key={i}>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-8 w-8" />
+                  </div>
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-3/4" />
+                  <div className="mt-3 p-3 bg-muted rounded-lg">
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+        ) : isError ? (
+           <p className="text-destructive text-center py-4">Error loading bookmarks. Please try again later.</p>
+        // Removed misplaced </div> from here
         ) : filteredBookmarks.length === 0 ? (
           <div className="text-center py-10">
             <Bookmark size={48} className="mx-auto mb-3 text-muted-foreground opacity-20" />

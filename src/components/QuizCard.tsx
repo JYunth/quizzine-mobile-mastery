@@ -53,12 +53,17 @@ export const QuizCard = ({
     });
   };
   
-  const handleToggleBookmark = (e: React.MouseEvent): void => {
+  const handleToggleBookmark = async (e: React.MouseEvent): Promise<void> => {
     e.preventDefault();
     e.stopPropagation();
-    const isNowBookmarked = toggleBookmark(question.id);
-    onBookmarkChange?.(isNowBookmarked);
-    toast(isNowBookmarked ? "Question has been bookmarked" : "Bookmark has been removed");
+    try {
+      const isNowBookmarked = await toggleBookmark(question.id);
+      onBookmarkChange?.(isNowBookmarked); // Pass the resolved boolean value
+      toast(isNowBookmarked ? "Question has been bookmarked" : "Bookmark has been removed");
+    } catch (error) {
+      console.error("Failed to toggle bookmark in QuizCard:", error);
+      toast.error("Failed to update bookmark status.");
+    }
   };
   
   const renderOptions = (): JSX.Element[] => {

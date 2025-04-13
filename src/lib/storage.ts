@@ -109,19 +109,28 @@ export const saveQuizAttempt = (attempt: QuizAttempt): void => {
 };
 
 // Toggle bookmark for a question
-export const toggleBookmark = (questionId: string): boolean => {
-  const storage = getStorage();
-  const index = storage.bookmarks.indexOf(questionId);
-  
-  if (index === -1) {
-    storage.bookmarks.push(questionId);
-    saveStorage(storage);
-    return true; // Added bookmark
-  } else {
-    storage.bookmarks.splice(index, 1);
-    saveStorage(storage);
-    return false; // Removed bookmark
-  }
+export const toggleBookmark = (questionId: string): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const storage = getStorage();
+      const index = storage.bookmarks.indexOf(questionId);
+      let isNowBookmarked: boolean;
+
+      if (index === -1) {
+        storage.bookmarks.push(questionId);
+        isNowBookmarked = true; // Added bookmark
+      } else {
+        storage.bookmarks.splice(index, 1);
+        isNowBookmarked = false; // Removed bookmark
+      }
+      
+      saveStorage(storage);
+      resolve(isNowBookmarked); // Resolve with the new bookmark status
+    } catch (error) {
+      console.error('Failed to toggle bookmark', error);
+      reject(error);
+    }
+  });
 };
 
 // Check if a question is bookmarked
@@ -263,23 +272,40 @@ export const getSmartBoostQuestions = async (): Promise<Question[]> => { // Remo
 };
 
 // Custom Quiz functions
-export const saveCustomQuiz = (quiz: CustomQuiz): void => {
-  const storage = getStorage();
-  storage.customQuizzes.push(quiz);
-  saveStorage(storage);
+export const saveCustomQuiz = (quiz: CustomQuiz): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const storage = getStorage();
+      storage.customQuizzes.push(quiz);
+      saveStorage(storage);
+      resolve();
+    } catch (error) {
+      console.error('Failed to save custom quiz', error);
+      reject(error);
+    }
+  });
 };
 
 // Update an existing custom quiz
-export const updateCustomQuiz = (updatedQuiz: CustomQuiz): void => {
-  const storage = getStorage();
-  const index = storage.customQuizzes.findIndex(quiz => quiz.id === updatedQuiz.id);
-  if (index !== -1) {
-    storage.customQuizzes[index] = updatedQuiz;
-    saveStorage(storage);
-  } else {
-    console.error(`Quiz with id ${updatedQuiz.id} not found for update.`);
-    // Optionally throw an error or handle it differently
-  }
+export const updateCustomQuiz = (updatedQuiz: CustomQuiz): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const storage = getStorage();
+      const index = storage.customQuizzes.findIndex(quiz => quiz.id === updatedQuiz.id);
+      if (index !== -1) {
+        storage.customQuizzes[index] = updatedQuiz;
+        saveStorage(storage);
+        resolve();
+      } else {
+        const errorMsg = `Quiz with id ${updatedQuiz.id} not found for update.`;
+        console.error(errorMsg);
+        reject(new Error(errorMsg)); // Reject the promise if not found
+      }
+    } catch (error) {
+      console.error('Failed to update custom quiz', error);
+      reject(error);
+    }
+  });
 };
 
 export const getCustomQuizzes = (): CustomQuiz[] => {
@@ -317,8 +343,17 @@ export const getQuestionsForCustomQuiz = async (quizId: string): Promise<Questio
   return loadedQuestions; // Return the array of found questions
 };
 
-export const deleteCustomQuiz = (id: string): void => {
-  const storage = getStorage();
-  storage.customQuizzes = storage.customQuizzes.filter(quiz => quiz.id !== id);
-  saveStorage(storage);
+// Also update deleteCustomQuiz for consistency, although not strictly required by the error
+export const deleteCustomQuiz = (id: string): Promise<void> => {
+ return new Promise((resolve, reject) => {
+    try {
+      const storage = getStorage();
+      storage.customQuizzes = storage.customQuizzes.filter(quiz => quiz.id !== id);
+      saveStorage(storage);
+      resolve();
+    } catch (error) {
+      console.error('Failed to delete custom quiz', error);
+      reject(error);
+    }
+  });
 };

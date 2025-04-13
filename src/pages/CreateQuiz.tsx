@@ -1,93 +1,108 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom"; // Import useParams
+import { useEffect, useState, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CustomQuiz, Question } from "@/types";
-// Import necessary storage functions
-import { 
-  getAllQuestions, 
-  saveCustomQuiz, 
-  getCustomQuizById, 
-  updateCustomQuiz 
-} from "@/lib/storage"; 
+import {
+  getAllQuestions, // Still needed for the query function
+  saveCustomQuiz,
+  getCustomQuizById,
+  updateCustomQuiz,
+  getCurrentCourseId // Needed for query key
+} from "@/lib/storage";
 import { X, Filter, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 
 export const CreateQuiz = (): JSX.Element => {
   const navigate = useNavigate();
-  const { quizId } = useParams<{ quizId?: string }>(); // Get quizId from URL params
-  const isEditMode = Boolean(quizId); // Determine if in edit mode
+  const { quizId } = useParams<{ quizId?: string }>();
+  const isEditMode = Boolean(quizId);
+  const queryClient = useQueryClient();
+  const currentCourseId = getCurrentCourseId(); // Get current course for query key
 
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
+  // Local state for form and UI
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [quizName, setQuizName] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false); // Track initial data load
-  const [filterWeek, setFilterWeek] = useState<number | null>(1); // Default filterWeek to 1
+  const [filterWeek, setFilterWeek] = useState<number | null>(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Load questions and potentially existing quiz data
+  // Fetch all questions for the current course
+  const { data: questions = [], isLoading: isLoadingQuestions, isError: isErrorQuestions } = useQuery<Question[]>({
+    queryKey: ['questions', currentCourseId], // Use course ID in key
+    queryFn: getAllQuestions, // This function gets questions for the current course
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Fetch existing quiz data if in edit mode
+  const { data: existingQuiz, isLoading: isLoadingExistingQuiz, isError: isErrorExistingQuiz } = useQuery<CustomQuiz | undefined>({
+    queryKey: ['customQuiz', quizId],
+    queryFn: () => getCustomQuizById(quizId!), // Pass quizId to the function
+    enabled: isEditMode && !!quizId, // Only run if in edit mode and quizId exists
+    staleTime: 1000 * 60, // Cache for 1 minute
+  });
+
+  // Effect to populate form when editing an existing quiz
   useEffect(() => {
-    const loadData = async (): Promise<void> => {
-      setLoading(true);
-      setInitialLoadComplete(false); // Reset load completion flag
-      try {
-        // Always load available questions for the current course
-        const courseQuestions = await getAllQuestions();
-        setQuestions(courseQuestions);
-        setFilteredQuestions(courseQuestions); // Apply default filter later
+    if (isEditMode && existingQuiz) {
+      setQuizName(existingQuiz.name);
+      setSelectedQuestions(existingQuiz.questionIds);
+      // Optionally set filterWeek based on loaded questions if needed
+      // const firstQuestionWeek = questions.find(q => q.id === existingQuiz.questionIds[0])?.week;
+      // setFilterWeek(firstQuestionWeek ?? 1);
+    } else if (!isEditMode) {
+      // Reset form for create mode
+      setQuizName("");
+      setSelectedQuestions([]);
+      setFilterWeek(1);
+    }
+  }, [isEditMode, existingQuiz, questions]); // Add questions dependency if setting filterWeek
 
-        // If in edit mode, load the existing quiz data
-        if (isEditMode && quizId) {
-          const existingQuiz = getCustomQuizById(quizId);
-          if (existingQuiz) {
-            setQuizName(existingQuiz.name);
-            setSelectedQuestions(existingQuiz.questionIds);
-            // Optionally set filterWeek based on loaded questions if needed, but default is 1
-          } else {
-            toast.error("Quiz not found. Redirecting...");
-            navigate('/custom-quizzes');
-            return; // Stop further processing if quiz not found
-          }
-        } else {
-          // Reset form for create mode
-          setQuizName("");
-          setSelectedQuestions([]);
-          setFilterWeek(1); // Ensure default week filter for create mode
-        }
-        
-      } catch (error) {
-        console.error("Failed to load data:", error);
-        toast.error("Failed to load necessary data. Please try again.");
-      } finally {
-        setLoading(false);
-        setInitialLoadComplete(true); // Mark initial load as complete
-      }
-    };
-
-    loadData();
-  }, [quizId, isEditMode, navigate]); // Rerun if quizId changes
-
-  // Apply week filter (only after initial data load is complete)
-  useEffect(() => {
-    if (!initialLoadComplete) return; // Don't filter until initial data is ready
-
+  // Memoize filtered questions based on local state and fetched questions
+  const filteredQuestions = useMemo(() => {
     let filtered = [...questions];
     if (filterWeek !== null) {
       filtered = filtered.filter(q => q.week === filterWeek);
     }
-    setFilteredQuestions(filtered);
-  }, [filterWeek, questions, initialLoadComplete]);
+    return filtered;
+  }, [filterWeek, questions]);
 
-  // Get unique weeks for filtering
-  const weeks = [...new Set(questions.map(q => q.week))].sort((a, b) => a - b);
-  
-  // Get unique courses for filtering
-  // Remove courses calculation as it's no longer needed for filtering
+  // Memoize unique weeks for filtering
+  const weeks = useMemo(() => {
+    return [...new Set(questions.map(q => q.week))].sort((a, b) => a - b);
+  }, [questions]);
+
+  // Mutations for saving/updating
+  const createMutation = useMutation({
+    mutationFn: saveCustomQuiz,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customQuizzes'] });
+      toast.success("Custom quiz created successfully");
+      navigate('/custom-quizzes');
+    },
+    onError: (error) => {
+      console.error("Failed to create custom quiz:", error);
+      toast.error("Failed to create quiz. Please try again.");
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateCustomQuiz,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customQuizzes'] });
+      queryClient.invalidateQueries({ queryKey: ['customQuiz', quizId] }); // Invalidate specific quiz too
+      toast.success("Custom quiz updated successfully");
+      navigate('/custom-quizzes');
+    },
+    onError: (error) => {
+      console.error("Failed to update custom quiz:", error);
+      toast.error("Failed to update quiz. Please try again.");
+    }
+  });
 
   const handleSelectQuestion = (questionId: string): void => {
     setSelectedQuestions(prev => {
@@ -106,39 +121,30 @@ export const CreateQuiz = (): JSX.Element => {
       toast.error("Please enter a quiz name");
       return;
     }
-    
     if (selectedQuestions.length === 0) {
       toast.error("Please select at least one question");
       return;
     }
 
-    if (isEditMode && quizId) {
-      // Update existing quiz
-      const updatedQuizData: CustomQuiz = {
-        id: quizId, // Use existing ID
-        name: trimmedName,
-        timestamp: new Date().toISOString(), // Update timestamp
-        questionIds: selectedQuestions,
-      };
-      updateCustomQuiz(updatedQuizData);
-      toast.success("Custom quiz updated successfully");
+    const quizData: CustomQuiz = {
+      id: isEditMode && quizId ? quizId : Date.now().toString(), // Use existing or new ID
+      name: trimmedName,
+      timestamp: new Date().toISOString(),
+      questionIds: selectedQuestions,
+    };
+
+    if (isEditMode) {
+      updateMutation.mutate(quizData);
     } else {
-      // Create new quiz
-      const newQuiz: CustomQuiz = {
-        id: Date.now().toString(), // Generate new ID
-        name: trimmedName,
-        timestamp: new Date().toISOString(),
-        questionIds: selectedQuestions,
-      };
-      saveCustomQuiz(newQuiz);
-      toast.success("Custom quiz created successfully");
+      createMutation.mutate(quizData);
     }
-    
-    navigate('/custom-quizzes'); // Navigate back after creation/update
   };
 
   // Dynamic page title
   const pageTitle = isEditMode ? "Edit Custom Quiz" : "Create Custom Quiz";
+  const isLoading = isLoadingQuestions || (isEditMode && isLoadingExistingQuiz);
+  const isMutating = createMutation.isPending || updateMutation.isPending;
+  const hasError = isErrorQuestions || (isEditMode && isErrorExistingQuiz);
 
   return (
     <PageLayout title={pageTitle}>
@@ -248,11 +254,22 @@ export const CreateQuiz = (): JSX.Element => {
           {/* Available Questions List */}
           <div className="border-t pt-4">
             <Label className="mb-2 block text-base font-semibold">Available Questions</Label>
-            {loading ? (
-              <div className="py-12 text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                <p className="mt-3 text-sm text-muted-foreground">Loading questions...</p>
+            {isLoading ? (
+              <div className="space-y-3 py-4">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="flex items-start space-x-3 border p-3 rounded-md">
+                    <Skeleton className="h-5 w-5 mt-1" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-3 w-1/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  </div>
+                ))}
               </div>
+            ) : hasError ? (
+               <p className="text-destructive text-center py-6">Error loading questions. Please try again later.</p>
+            // Removed misplaced </div> from here
             ) : (
               <div className="space-y-2 max-h-[50vh] overflow-y-auto border rounded-md p-3 bg-background">
                 {filteredQuestions.length === 0 ? (
@@ -296,11 +313,11 @@ export const CreateQuiz = (): JSX.Element => {
           {/* Submit Button (Text changes based on mode) */}
           <div className="flex justify-end pt-6 border-t">
             <Button 
-              onClick={handleSubmit} // Use the updated handler
-              disabled={selectedQuestions.length === 0 || !quizName.trim() || loading}
+              onClick={handleSubmit}
+              disabled={selectedQuestions.length === 0 || !quizName.trim() || isLoading || isMutating || hasError}
               size="lg"
             >
-              {isEditMode ? "Update Quiz" : "Create Quiz"} ({selectedQuestions.length} questions)
+              {isMutating ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? "Update Quiz" : "Create Quiz")} ({selectedQuestions.length} questions)
             </Button>
           </div>
         </div>

@@ -1,6 +1,8 @@
-import { createRoot } from 'react-dom/client'
-import { App } from './App.tsx'
-import './index.css'
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { App } from './App.tsx';
+import './index.css';
 import { registerSW } from 'virtual:pwa-register'
 
 // Register the service worker
@@ -14,9 +16,18 @@ const updateSW = registerSW({
   }
 })
 
+// Create a client
+const queryClient = new QueryClient();
+
 const rootElement = document.getElementById("root");
 if (rootElement) {
-  createRoot(rootElement).render(<App />);
+  createRoot(rootElement).render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
 
   // Hide the splash screen after the app is rendered
   const splashScreen = document.getElementById('splash-screen');
