@@ -39,6 +39,15 @@ export interface QuizAttempt {
   totalQuestions: number;
 }
 
+// New interface to store performance stats for a single question
+export interface QuestionPerformanceStats {
+  questionId: string;
+  totalAttempts: number;
+  correctAttempts: number;
+  incorrectAttempts: number;
+  lastAttemptTimestamp: string; // ISO timestamp string
+}
+
 // Custom Quiz
 export interface CustomQuiz {
   id: string;
@@ -65,6 +74,8 @@ export interface AppStorage {
     currentStreak: number;
   };
   customQuizzes: CustomQuiz[];
+  // NEW: Map to store aggregated performance stats per question
+  questionPerformance: { [questionId: string]: QuestionPerformanceStats };
 }
 
 // Quiz modes

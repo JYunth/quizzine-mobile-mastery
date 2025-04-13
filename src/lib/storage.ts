@@ -21,6 +21,7 @@ const initialStorage: AppStorage = {
     currentStreak: 0,     // Initialize to 0
   },
   customQuizzes: [],
+  questionPerformance: {}, // Initialize as empty object
 };
 
 // Get storage from localStorage
@@ -146,10 +147,40 @@ export const importStorage = (jsonString: string): boolean => {
 };
 
 // Removed the old updateStreak function. Logic moved to useStreak hook.
-// Save quiz attempt
+// Save quiz attempt and update performance stats
 export const saveQuizAttempt = (attempt: QuizAttempt): void => {
   const storage = getStorage();
   storage.attempts.push(attempt);
+
+  // Ensure questionPerformance map exists
+  if (!storage.questionPerformance) {
+    storage.questionPerformance = {};
+  }
+
+  const nowTimestamp = new Date().toISOString();
+
+  // Update performance stats for each question in the attempt
+  attempt.answers.forEach(answer => {
+    const { questionId, correct } = answer;
+    const stats = storage.questionPerformance[questionId] || {
+      questionId: questionId,
+      totalAttempts: 0,
+      correctAttempts: 0,
+      incorrectAttempts: 0,
+      lastAttemptTimestamp: '', // Will be overwritten
+    };
+
+    stats.totalAttempts += 1;
+    if (correct) {
+      stats.correctAttempts += 1;
+    } else {
+      stats.incorrectAttempts += 1;
+    }
+    stats.lastAttemptTimestamp = nowTimestamp;
+
+    storage.questionPerformance[questionId] = stats;
+  });
+
   saveStorage(storage);
   // updateStreak(); // Removed: Streak update is now handled centrally, e.g., on app load
 };
@@ -271,30 +302,49 @@ export const getBookmarkedQuestions = (allQuestions: Question[]): Question[] => 
   return allQuestions.filter(q => storage.bookmarks.includes(q.id));
 };
 
-// Get "smart boost" questions (only rated questions with confidence < 3) from cache
-// Get "smart boost" questions (expects allQuestions array passed in)
+// Get "smart boost" questions based on performance (Weakness Focus - Interpretation A)
+// Prioritizes questions answered incorrectly, sorted by most recent attempt.
 export const getSmartBoostQuestions = (allQuestions: Question[]): Question[] => {
-  if (!allQuestions) return [];
+  if (!allQuestions || allQuestions.length === 0) return [];
+
   const storage = getStorage();
   const courseId = getCurrentCourseId();
+  const performanceStats = storage.questionPerformance;
 
-  // Filter for current course first
+  if (!performanceStats) {
+    console.warn("getSmartBoostQuestions: questionPerformance data is missing.");
+    return [];
+  }
+
+  // 1. Filter for current course
   const courseQuestions = allQuestions.filter(q => q.courseId === courseId);
 
-  // Filter for questions that have been rated AND have confidence < 3
-  const lowConfidenceRatedQuestions = courseQuestions.filter(q => {
-    const confidence = storage.confidenceRatings[q.id];
-    return confidence !== undefined && confidence < 3;
+  // 2. Filter for questions with recorded incorrect attempts
+  const weakQuestions = courseQuestions.filter(q => {
+    const stats = performanceStats[q.id];
+    // Include only questions that have stats and have been answered incorrectly at least once
+    return stats && stats.incorrectAttempts > 0;
   });
 
-  // Sort the filtered questions by confidence (lowest first: 0, 1, 2)
-  const sortedQuestions = lowConfidenceRatedQuestions.sort((a, b) => {
-    const confidenceA = storage.confidenceRatings[a.id]!;
-    const confidenceB = storage.confidenceRatings[b.id]!;
-    return confidenceA - confidenceB;
+  // 3. Sort by last attempt timestamp (most recent first)
+  const sortedWeakQuestions = weakQuestions.sort((a, b) => {
+    const statsA = performanceStats[a.id];
+    const statsB = performanceStats[b.id];
+
+    // Should always have stats due to the filter above, but add checks for safety
+    if (!statsA || !statsB || !statsA.lastAttemptTimestamp || !statsB.lastAttemptTimestamp) {
+        // If stats or timestamps are missing for some reason, don't change order
+        return 0;
+    }
+
+    // Compare timestamps as strings (ISO format allows direct comparison for recency)
+    // Newer timestamp string is "greater"
+    if (statsA.lastAttemptTimestamp > statsB.lastAttemptTimestamp) return -1; // a is more recent, comes first
+    if (statsA.lastAttemptTimestamp < statsB.lastAttemptTimestamp) return 1;  // b is more recent, comes first
+    return 0; // timestamps are the same (unlikely but possible)
   });
 
-  return sortedQuestions;
+  return sortedWeakQuestions;
 };
 
 // Custom Quiz functions
