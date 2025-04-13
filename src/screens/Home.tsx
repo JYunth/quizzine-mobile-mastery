@@ -1,8 +1,9 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useQuestions } from "@/hooks/useQuestions"; // Import useQuestions
 import { PageLayout } from "@/components/PageLayout";
-import { getAllQuestions, getStorage, updateStreak, getAllCourses, getCurrentCourseId, setCurrentCourseId } from "@/lib/storage";
+import { getAllQuestions, getStorage, updateStreak, getAllCourses, getCurrentCourseId, setCurrentCourseId } from "@/lib/storage"; // Keep storage functions
 import { Course, Question } from "@/types";
 import { WeekCard } from "@/components/WeekCard";
 import { ActionCard } from "@/components/ActionCard";
@@ -16,21 +17,31 @@ export const Home = (): JSX.Element => {
   const [streak, setStreak] = useState(0);
   const [currentCourseId, setCurrentCourseState] = useState<string>(getCurrentCourseId());
 
-  // Fetch courses using TanStack Query
-  const { data: courses = [], isLoading: isLoadingCourses, isSuccess: isSuccessCourses, isError: isErrorCourses } = useQuery<Course[]>({
-    queryKey: ['courses'],
-    queryFn: getAllCourses,
-    staleTime: Infinity, // Courses are static, cache indefinitely
-  });
+  // Fetch base question data (includes courses)
+  const {
+    data: questionData,
+    isLoading: isLoadingBase,
+    isError: isErrorBase,
+  } = useQuestions();
+
+  // Derive courses directly from the base data hook
+  const courses = useMemo(() => questionData?.courses ?? [], [questionData]);
+  const safeCourses = courses ?? []; // Ensure it's always an array
+
+  // Use loading/success/error states from the base hook for courses
+  const isLoadingCourses = isLoadingBase;
+  const isSuccessCourses = !isLoadingBase && !isErrorBase && !!questionData;
+  const isErrorCourses = isErrorBase;
 
   // Effect to set initial course ID once courses are successfully loaded
   useEffect(() => {
-    if (isSuccessCourses && courses.length > 0) {
+    // Use safeCourses and check length
+    if (isSuccessCourses && safeCourses.length > 0) {
       const initialCourseId = getCurrentCourseId();
       // Check if the currently stored course ID exists in the loaded courses
-      if (!courses.some(c => c.id === initialCourseId)) {
+      if (!safeCourses.some(c => c.id === initialCourseId)) {
         // If not valid, use the first course as a fallback
-        const fallbackId = courses[0].id;
+        const fallbackId = safeCourses[0].id;
         setCurrentCourseState(fallbackId);
         setCurrentCourseId(fallbackId); // Persist the fallback ID
       } else {
@@ -38,19 +49,21 @@ export const Home = (): JSX.Element => {
         setCurrentCourseState(initialCourseId);
       }
     }
-    // Only run when courses are successfully loaded or the success status changes
-  }, [isSuccessCourses, courses]);
+  }, [isSuccessCourses, safeCourses]); // Depend on safeCourses
 
   // Fetch questions for the selected course using TanStack Query
-  const { data: questions = [], isLoading: isLoadingQuestions, isError: isErrorQuestions } = useQuery<Question[]>({
-    // Query key includes the course ID to refetch when it changes
-    queryKey: ['questions', currentCourseId],
-    // The query function `getAllQuestions` implicitly uses the currentCourseId from storage
-    queryFn: getAllQuestions,
-    // Only run the query if a course ID is selected
-    enabled: !!currentCourseId && isSuccessCourses, // Enable only when a course is selected and courses have successfully loaded
-    staleTime: 1000 * 60 * 5, // Cache questions for 5 minutes
+  // Fetch questions filtered for the selected course (dependent query)
+  const { data: courseQuestions, isLoading: isLoadingCourseQuestions, isError: isErrorCourseQuestions } = useQuery<Question[]>({
+    queryKey: ['courseQuestions', currentCourseId, questionData?.allQuestions], // Depends on base data
+    queryFn: () => {
+      if (!questionData?.allQuestions) return []; // Guard
+      return getAllQuestions(questionData.allQuestions); // Pass base data
+    },
+    // Enable only when base data is ready AND a course ID is selected
+    enabled: !!questionData?.allQuestions && !!currentCourseId && isSuccessCourses,
+    staleTime: 1000 * 60 * 5,
   });
+  const safeCourseQuestions = courseQuestions ?? []; // Ensure it's always an array
 
   // Effect for streak (remains unchanged as it uses localStorage)
   useEffect(() => {
@@ -62,7 +75,11 @@ export const Home = (): JSX.Element => {
   // Memoize the calculation of week data
   const weekData = useMemo(() => {
     const weekMap = new Map<number, { count: number, tags: string[], title?: string }>();
-    questions.forEach(q => {
+    // Use safeCourseQuestions and check loading/error states
+    if (isLoadingBase || isLoadingCourseQuestions || isErrorBase || isErrorCourseQuestions) {
+      return new Map(); // Return empty map if loading or error
+    }
+    safeCourseQuestions.forEach(q => {
       if (!weekMap.has(q.week)) {
         weekMap.set(q.week, { count: 0, tags: [], title: q.weekTitle });
       }
@@ -77,13 +94,13 @@ export const Home = (): JSX.Element => {
       }
     });
     return weekMap;
-  }, [questions]); // Recalculate only when questions change
+  }, [safeCourseQuestions, isLoadingBase, isLoadingCourseQuestions, isErrorBase, isErrorCourseQuestions]); // Update dependencies
   
   const handleCourseChange = (courseId: string) => {
     setCurrentCourseState(courseId);
     setCurrentCourseId(courseId);
-    // Ensure courses is treated as an array before calling find
-    const courseName = Array.isArray(courses) ? courses.find(c => c.id === courseId)?.name : 'Unknown Course';
+    // Use safeCourses
+    const courseName = safeCourses.find(c => c.id === courseId)?.name ?? 'Unknown Course';
     toast(`Switched to ${courseName}`);
   };
   
@@ -101,7 +118,8 @@ export const Home = (): JSX.Element => {
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
               <SelectContent>
-                {Array.isArray(courses) && courses.map(course => (
+                {/* Use safeCourses */}
+                {safeCourses.map(course => (
                   <SelectItem key={course.id} value={course.id}>
                     {course.name}
                   </SelectItem>
@@ -153,7 +171,8 @@ export const Home = (): JSX.Element => {
         </div>
         
         <h2 className="font-semibold text-xl mb-4">Weeks</h2>
-        {isLoadingCourses || isLoadingQuestions ? (
+        {/* Combine loading states */}
+        {isLoadingBase || isLoadingCourseQuestions ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {/* Placeholder skeletons */}
             {[1, 2, 3].map(i => (
@@ -167,9 +186,12 @@ export const Home = (): JSX.Element => {
               </div>
             ))}
           </div>
-        ) : isErrorCourses || isErrorQuestions ? (
+        )
+        // Combine error states
+        : isErrorBase || isErrorCourseQuestions ? (
            <p className="text-destructive text-center py-4">Error loading data. Please try again later.</p>
-        ) : weeks.length === 0 ? (
+        )
+        : weeks.length === 0 ? (
            <p className="text-muted-foreground text-center py-4">No weeks found for this course.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

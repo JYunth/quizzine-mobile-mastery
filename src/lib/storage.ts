@@ -1,6 +1,6 @@
 import { AppStorage, Question, QuizAttempt, CustomQuiz, Course } from "@/types";
 // Import the new Map getter from questionStore
-import { getQuestionData, getCachedCourses, getCachedAllQuestions, getCachedQuestionsMap } from "./questionStore"; 
+// Removed unused import from deleted questionStore
 
 const STORAGE_KEY = 'quizzineApp';
 
@@ -166,65 +166,45 @@ export const setCurrentCourseId = (courseId: string): void => {
   saveStorage(storage);
 };
 
-// Get all courses from cache
-export const getAllCourses = async (): Promise<Course[]> => {
-  return await getCachedCourses();
+// Get all courses (expects courses array passed in)
+export const getAllCourses = (courses: Course[]): Course[] => {
+  return courses;
 };
 
 // Get questions for week in current course from cache
-export const getQuestionsForWeek = async (week: number): Promise<Question[]> => {
-  
-  let questionData;
-  try {
-    questionData = await getQuestionData(); 
-  } catch (error) {
-    console.error("getQuestionsForWeek: Error awaiting getQuestionData:", error);
-    return []; // Return empty on error
+// Get questions for week in current course (expects allQuestions array passed in)
+export const getQuestionsForWeek = (week: number, allQuestions: Question[]): Question[] => {
+  if (!allQuestions || allQuestions.length === 0) {
+    console.warn("getQuestionsForWeek: allQuestions array is empty or undefined!");
+    return [];
   }
 
-  // Check if questionData exists before accessing properties
-  if (!questionData) {
-      console.warn("getQuestionsForWeek: questionData is null or undefined after await!");
-      return [];
-  }
-
-  const allQuestionsFromData = questionData.allQuestions; // Access directly now
-
-  // *** Add try...catch around courseId retrieval and filtering ***
   try {
     const courseId = getCurrentCourseId();
-
-    if (!allQuestionsFromData || allQuestionsFromData.length === 0) {
-        console.warn("getQuestionsForWeek: allQuestionsFromData is empty or undefined before filtering!");
-        return []; // Return early if no questions to filter
-    }
-    
-    // *** RESTORED FILTERING LOGIC ***
-    const filteredQuestions = allQuestionsFromData.filter(q => {
-      // Check types explicitly for extra safety, though likely not the issue now
+    const filteredQuestions = allQuestions.filter(q => {
       const courseMatch = String(q.courseId) === String(courseId);
       const weekMatch = Number(q.week) === Number(week);
       return courseMatch && weekMatch;
     });
-
     return filteredQuestions;
-
   } catch (error) {
-    console.error(`getQuestionsForWeek: Error during courseId retrieval or filtering for week ${week}:`, error);
-    return []; // Return empty array if an error occurs here
+    console.error(`getQuestionsForWeek: Error during filtering for week ${week}:`, error);
+    return [];
   }
 };
 
 // Get all questions from current course from cache
-export const getAllQuestions = async (): Promise<Question[]> => {
-  const { allQuestions } = await getQuestionData();
+// Get all questions from current course (expects allQuestions array passed in)
+export const getAllQuestions = (allQuestions: Question[]): Question[] => {
+  if (!allQuestions) return [];
   const courseId = getCurrentCourseId();
   return allQuestions.filter(q => q.courseId === courseId);
 };
 
 // Get questions from all courses from cache
-export const getAllQuestionsFromAllCourses = async (): Promise<Question[]> => {
-  return await getCachedAllQuestions();
+// Get questions from all courses (expects allQuestions array passed in)
+export const getAllQuestionsFromAllCourses = (allQuestions: Question[]): Question[] => {
+  return allQuestions ?? [];
 };
 
 // Shuffle an array (Fisher-Yates algorithm)
@@ -238,17 +218,19 @@ export const shuffleArray = <T>(array: T[]): T[] => {
 };
 
 // Get bookmarked questions from cache
-export const getBookmarkedQuestions = async (): Promise<Question[]> => {
+// Get bookmarked questions (expects allQuestions array passed in)
+export const getBookmarkedQuestions = (allQuestions: Question[]): Question[] => {
+  if (!allQuestions) return [];
   const storage = getStorage();
-  const allQuestions = await getCachedAllQuestions(); // Use cached data
   return allQuestions.filter(q => storage.bookmarks.includes(q.id));
 };
 
 // Get "smart boost" questions (only rated questions with confidence < 3) from cache
-export const getSmartBoostQuestions = async (): Promise<Question[]> => { // Removed count parameter
+// Get "smart boost" questions (expects allQuestions array passed in)
+export const getSmartBoostQuestions = (allQuestions: Question[]): Question[] => {
+  if (!allQuestions) return [];
   const storage = getStorage();
   const courseId = getCurrentCourseId();
-  const allQuestions = await getCachedAllQuestions(); // Use cached data
 
   // Filter for current course first
   const courseQuestions = allQuestions.filter(q => q.courseId === courseId);
@@ -256,19 +238,17 @@ export const getSmartBoostQuestions = async (): Promise<Question[]> => { // Remo
   // Filter for questions that have been rated AND have confidence < 3
   const lowConfidenceRatedQuestions = courseQuestions.filter(q => {
     const confidence = storage.confidenceRatings[q.id];
-    // Check if confidence is defined (meaning it's rated) AND less than 3
-    return confidence !== undefined && confidence < 3; 
+    return confidence !== undefined && confidence < 3;
   });
 
   // Sort the filtered questions by confidence (lowest first: 0, 1, 2)
   const sortedQuestions = lowConfidenceRatedQuestions.sort((a, b) => {
-    // We know confidence is defined here because of the filter above
-    const confidenceA = storage.confidenceRatings[a.id]!; 
+    const confidenceA = storage.confidenceRatings[a.id]!;
     const confidenceB = storage.confidenceRatings[b.id]!;
     return confidenceA - confidenceB;
   });
-  
-  return sortedQuestions; // Return all matching questions
+
+  return sortedQuestions;
 };
 
 // Custom Quiz functions
@@ -319,28 +299,28 @@ export const getCustomQuizById = (id: string): CustomQuiz | undefined => {
 };
 
 // Get questions for custom quiz using the optimized Map lookup
-export const getQuestionsForCustomQuiz = async (quizId: string): Promise<Question[]> => {
+// Get questions for custom quiz (expects questionsById Map passed in)
+export const getQuestionsForCustomQuiz = (quizId: string, questionsById: Map<string, Question>): Question[] => {
   const quiz = getCustomQuizById(quizId);
   if (!quiz || quiz.questionIds.length === 0) {
-    // console.log(`Custom quiz ${quizId} not found or has no questions.`); // Removed log
     return [];
   }
+  if (!questionsById) {
+      console.warn("getQuestionsForCustomQuiz: questionsById Map is missing!");
+      return [];
+  }
 
-  // console.log(`Fetching questions for custom quiz ${quizId} using Map lookup...`); // Removed log
-  const questionsMap = await getCachedQuestionsMap(); // Get the Map
   const loadedQuestions: Question[] = [];
-
   quiz.questionIds.forEach(qId => {
-    const question = questionsMap.get(qId);
+    const question = questionsById.get(qId);
     if (question) {
       loadedQuestions.push(question);
     } else {
-      // console.warn(`Question ID ${qId} from custom quiz ${quizId} not found in cache.`); // Removed log
+      console.warn(`Question ID ${qId} from custom quiz ${quizId} not found in provided map.`);
     }
   });
 
-  // console.log(`Found ${loadedQuestions.length} questions for custom quiz ${quizId}.`); // Removed log
-  return loadedQuestions; // Return the array of found questions
+  return loadedQuestions;
 };
 
 // Also update deleteCustomQuiz for consistency, although not strictly required by the error

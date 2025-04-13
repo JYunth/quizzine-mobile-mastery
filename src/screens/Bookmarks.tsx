@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuestions } from "@/hooks/useQuestions"; // Import useQuestions
 import { PageLayout } from "@/components/PageLayout";
 import { getBookmarkedQuestions, toggleBookmark } from "@/lib/storage";
 import { Question } from "@/types";
@@ -19,12 +20,28 @@ export const Bookmarks = (): JSX.Element => {
 
   const queryClient = useQueryClient();
 
-  // Fetch bookmarked questions using TanStack Query
-  const { data: bookmarks = [], isLoading, isError } = useQuery<Question[]>({
-    queryKey: ['bookmarks'],
-    queryFn: getBookmarkedQuestions,
-    staleTime: 1000 * 60, // Cache for 1 minute, refetch on window focus etc.
+  // Fetch base question data
+  const {
+    data: questionData,
+    isLoading: isLoadingBase,
+    isError: isErrorBase,
+  } = useQuestions();
+
+  // Fetch bookmarked questions using TanStack Query, dependent on base data
+  const { data: bookmarks, isLoading: isLoadingBookmarks, isError: isErrorBookmarks } = useQuery<Question[]>({
+    queryKey: ['bookmarks', questionData?.allQuestions], // Include base data in key
+    queryFn: () => {
+      if (!questionData?.allQuestions) return []; // Don't run if base data not ready
+      return getBookmarkedQuestions(questionData.allQuestions); // Pass allQuestions
+    },
+    enabled: !!questionData?.allQuestions, // Enable only when base data is available
+    staleTime: 1000 * 60,
   });
+
+  // Combine loading and error states
+  const isLoading = isLoadingBase || isLoadingBookmarks;
+  const isError = isErrorBase || isErrorBookmarks;
+  const safeBookmarks = bookmarks ?? []; // Use empty array if data is undefined
 
   // Mutation for toggling bookmarks
   const { mutate: toggleBookmarkMutation } = useMutation({
@@ -57,29 +74,29 @@ export const Bookmarks = (): JSX.Element => {
   
   // Memoize unique weeks for filter
   const weeks = useMemo(() => {
-    return Array.from(new Set(bookmarks.map(b => b.week))).sort((a, b) => a - b);
-  }, [bookmarks]); // Recalculate only when bookmarks change
+    if (isLoading || isError || !safeBookmarks) return []; // Guard against undefined/loading data
+    return Array.from(new Set(safeBookmarks.map(b => b.week))).sort((a, b) => a - b);
+  }, [safeBookmarks, isLoading, isError]); // Update dependencies
 
   // Memoize filtered bookmarks
   const filteredBookmarks = useMemo(() => {
-    return bookmarks.filter(bookmark => {
+    if (isLoading || isError || !safeBookmarks) return []; // Guard against undefined/loading data
+    return safeBookmarks.filter(bookmark => {
       // Week filter
       if (selectedWeek !== null && bookmark.week !== selectedWeek) {
         return false;
       }
-      
       // Search filter
       if (searchTerm) {
         const lowerSearchTerm = searchTerm.toLowerCase();
         return (
           bookmark.question.toLowerCase().includes(lowerSearchTerm) ||
-          (bookmark.tags && bookmark.tags.some(tag => tag.toLowerCase().includes(lowerSearchTerm))) // Added check for tags existence
+          (bookmark.tags && bookmark.tags.some(tag => tag.toLowerCase().includes(lowerSearchTerm)))
         );
       }
-      
       return true;
     });
-  }, [bookmarks, selectedWeek, searchTerm]); // Recalculate when dependencies change
+  }, [safeBookmarks, selectedWeek, searchTerm, isLoading, isError]); // Update dependencies
   
   return (
     <PageLayout title="Bookmarks">
@@ -104,9 +121,10 @@ export const Bookmarks = (): JSX.Element => {
             >
               All
             </Badge>
-            {weeks.map(week => (
-              <Badge 
-                key={week}
+            {/* Render weeks only if not loading/error */}
+            {!isLoading && !isError && weeks.map(week => (
+              <Badge
+                key={week} // Assuming week is number here, TS might complain if mixed types
                 variant={selectedWeek === week ? "default" : "outline"}
                 className="cursor-pointer"
                 onClick={() => setSelectedWeek(week === selectedWeek ? null : week)}
@@ -143,8 +161,9 @@ export const Bookmarks = (): JSX.Element => {
             <Bookmark size={48} className="mx-auto mb-3 text-muted-foreground opacity-20" />
             <h2 className="text-xl font-semibold mb-2">No bookmarks found</h2>
             <p className="text-muted-foreground mb-6">
-              {bookmarks.length === 0 
-                ? "You haven't bookmarked any questions yet." 
+              {/* Check safeBookmarks length */}
+              {safeBookmarks.length === 0
+                ? "You haven't bookmarked any questions yet."
                 : "No bookmarks match your filters."}
             </p>
             {selectedWeek !== null || searchTerm ? (
@@ -166,8 +185,8 @@ export const Bookmarks = (): JSX.Element => {
         ) : (
           <>
             <div className="flex justify-between items-center mb-4">
+              {/* Use filteredBookmarks length */}
               <h2 className="font-semibold">{filteredBookmarks.length} Bookmarked Question{filteredBookmarks.length !== 1 ? 's' : ''}</h2>
-              
               {filteredBookmarks.length > 0 && (
                 <Link to="/quiz/bookmark">
                   <Button size="sm">Quiz Bookmarks</Button>

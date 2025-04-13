@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuestions } from "@/hooks/useQuestions"; // Import useQuestions
 import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CustomQuiz, Question } from "@/types";
 import {
-  getAllQuestions, // Still needed for the query function
+  getAllQuestions, // Keep storage function
   saveCustomQuiz,
   getCustomQuizById,
   updateCustomQuiz,
-  getCurrentCourseId // Needed for query key
+  getCurrentCourseId
 } from "@/lib/storage";
 import { X, Filter, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -31,12 +32,24 @@ export const CreateQuiz = (): JSX.Element => {
   const [filterWeek, setFilterWeek] = useState<number | null>(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch all questions for the current course
-  const { data: questions = [], isLoading: isLoadingQuestions, isError: isErrorQuestions } = useQuery<Question[]>({
-    queryKey: ['questions', currentCourseId], // Use course ID in key
-    queryFn: getAllQuestions, // This function gets questions for the current course
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  // Fetch base question data
+  const {
+    data: questionData,
+    isLoading: isLoadingBase,
+    isError: isErrorBase,
+  } = useQuestions();
+
+  // Fetch questions filtered for the current course (dependent query)
+  const { data: courseQuestions, isLoading: isLoadingCourseQuestions, isError: isErrorCourseQuestions } = useQuery<Question[]>({
+    queryKey: ['courseQuestions', currentCourseId, questionData?.allQuestions], // Key depends on base data
+    queryFn: () => {
+      if (!questionData?.allQuestions) return []; // Guard
+      return getAllQuestions(questionData.allQuestions); // Pass base data
+    },
+    enabled: !!questionData?.allQuestions, // Enable when base data is ready
+    staleTime: 1000 * 60 * 5,
   });
+  const safeCourseQuestions = courseQuestions ?? []; // Use empty array if undefined
 
   // Fetch existing quiz data if in edit mode
   const { data: existingQuiz, isLoading: isLoadingExistingQuiz, isError: isErrorExistingQuiz } = useQuery<CustomQuiz | undefined>({
@@ -60,21 +73,23 @@ export const CreateQuiz = (): JSX.Element => {
       setSelectedQuestions([]);
       setFilterWeek(1);
     }
-  }, [isEditMode, existingQuiz, questions]); // Add questions dependency if setting filterWeek
+  }, [isEditMode, existingQuiz, safeCourseQuestions]); // Use safeCourseQuestions
 
   // Memoize filtered questions based on local state and fetched questions
   const filteredQuestions = useMemo(() => {
-    let filtered = [...questions];
+    if (isLoadingBase || isLoadingCourseQuestions || !safeCourseQuestions) return []; // Guard
+    let filtered = [...safeCourseQuestions];
     if (filterWeek !== null) {
       filtered = filtered.filter(q => q.week === filterWeek);
     }
     return filtered;
-  }, [filterWeek, questions]);
+  }, [filterWeek, safeCourseQuestions, isLoadingBase, isLoadingCourseQuestions]); // Update dependencies
 
   // Memoize unique weeks for filtering
   const weeks = useMemo(() => {
-    return [...new Set(questions.map(q => q.week))].sort((a, b) => a - b);
-  }, [questions]);
+    if (isLoadingBase || isLoadingCourseQuestions || !safeCourseQuestions) return []; // Guard
+    return [...new Set(safeCourseQuestions.map(q => q.week))].sort((a, b) => a - b);
+  }, [safeCourseQuestions, isLoadingBase, isLoadingCourseQuestions]); // Update dependencies
 
   // Mutations for saving/updating
   const createMutation = useMutation({
@@ -142,9 +157,10 @@ export const CreateQuiz = (): JSX.Element => {
 
   // Dynamic page title
   const pageTitle = isEditMode ? "Edit Custom Quiz" : "Create Custom Quiz";
-  const isLoading = isLoadingQuestions || (isEditMode && isLoadingExistingQuiz);
+  // Combine all loading and error states
+  const isLoading = isLoadingBase || isLoadingCourseQuestions || (isEditMode && isLoadingExistingQuiz);
   const isMutating = createMutation.isPending || updateMutation.isPending;
-  const hasError = isErrorQuestions || (isEditMode && isErrorExistingQuiz);
+  const hasError = isErrorBase || isErrorCourseQuestions || (isEditMode && isErrorExistingQuiz);
 
   return (
     <PageLayout title={pageTitle}>
@@ -206,9 +222,10 @@ export const CreateQuiz = (): JSX.Element => {
                 <Label className="text-sm font-medium">Filter by Week</Label>
                 <div className="flex flex-wrap gap-2">
                   {/* Remove "All Weeks" button */}
-                  {weeks.map(week => (
+                  {/* Render weeks only if not loading/error */}
+                  {!isLoading && !hasError && weeks.map(week => (
                     <Button
-                      key={week}
+                      key={week} // Assuming week is number
                       variant={filterWeek === week ? "secondary" : "outline"}
                       size="sm"
                       onClick={() => setFilterWeek(week)}
@@ -227,14 +244,13 @@ export const CreateQuiz = (): JSX.Element => {
               <Label className="text-sm font-medium">Selected Questions ({selectedQuestions.length})</Label>
               <div className="max-h-[25vh] overflow-y-auto space-y-2 border rounded-md p-3 bg-background">
                 {selectedQuestions.map(id => {
-                  const question = questions.find(q => q.id === id);
+                  {/* Use safeCourseQuestions */}
+                  const question = safeCourseQuestions.find(q => q.id === id);
                   return (
-                    // Change from flex to grid layout
                     <div key={id} className="grid grid-cols-[1fr_auto] gap-2 items-center p-2 rounded-md border text-sm bg-muted/20">
-                      {/* Keep min-w-0 for robustness, remove flex-1 and mr-2 as grid handles spacing */}
-                      <p className="truncate min-w-0"> 
-                        {question?.question.substring(0, 60)}... 
-                        <span className="text-xs text-muted-foreground ml-2">({question?.courseId} W{question?.week})</span>
+                      <p className="truncate min-w-0">
+                        {question ? `${question.question.substring(0, 60)}...` : 'Loading...'}
+                        {question && <span className="text-xs text-muted-foreground ml-2">({question.courseId} W{question.week})</span>}
                       </p>
                       <Button 
                         variant="ghost" 

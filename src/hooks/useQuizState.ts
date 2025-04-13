@@ -1,10 +1,11 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query"; // Import useQuery
-import { Answer, Question, QuizMode } from "@/types";
+import { Answer, Question, QuizMode, Course } from "@/types"; // Added Course type if needed later
+import { useQuestions } from "@/hooks/useQuestions"; // Import the main question hook
 import {
   getStorage,
-  getAllQuestions,
+  getAllQuestions, // Keep storage functions
   getBookmarkedQuestions,
   getQuestionsForWeek,
   getSmartBoostQuestions,
@@ -48,37 +49,60 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
   
   const currentCourseId = getCurrentCourseId(); // Needed for query key consistency
 
-  // Fetch questions using TanStack Query based on mode, week, id
-  const { data: fetchedQuestions = [], isLoading, isError } = useQuery<Question[]>({
-    queryKey: ['quizQuestions', mode, week, id, currentCourseId], // Dynamic query key
-    queryFn: async () => {
+  // Fetch base question data using the main hook
+  const {
+    data: questionData,
+    isLoading: isLoadingBaseQuestions,
+    isError: isErrorBaseQuestions,
+    // We get courses, allQuestions, questionsById from here
+  } = useQuestions();
+
+  // Select/filter questions for the specific quiz mode using TanStack Query
+  // This query now DEPENDS on the base data being loaded successfully.
+  const { data: fetchedQuestions = [], isLoading: isLoadingFiltered, isError: isErrorFiltered } = useQuery<Question[]>({
+    // Query key depends on base data and mode parameters
+    queryKey: ['quizQuestionsFiltered', mode, week, id, currentCourseId, questionData],
+    queryFn: () => { // No longer async, just filtering/selecting from existing data
+      // Ensure base data is loaded before proceeding
+      if (isLoadingBaseQuestions || isErrorBaseQuestions || !questionData) {
+        // console.warn("Base question data not ready for filtering.");
+        return []; // Return empty if base data isn't ready
+      }
+
+      // Pass the required data from questionData to the storage functions
       switch(mode) {
         case 'weekly':
           if (!week) throw new Error("Week parameter is required for weekly quiz mode.");
-          return getQuestionsForWeek(parseInt(week));
+          return getQuestionsForWeek(parseInt(week), questionData.allQuestions);
         case 'full':
-          return getAllQuestions(); // Gets questions for the current course
+          return getAllQuestions(questionData.allQuestions); // Pass allQuestions
         case 'bookmark':
-          return getBookmarkedQuestions();
+          return getBookmarkedQuestions(questionData.allQuestions); // Pass allQuestions
         case 'smart':
-          return getSmartBoostQuestions();
+          return getSmartBoostQuestions(questionData.allQuestions); // Pass allQuestions
         case 'custom':
           if (!id) throw new Error("ID parameter is required for custom quiz mode.");
-          return getQuestionsForCustomQuiz(id);
+          return getQuestionsForCustomQuiz(id, questionData.questionsById); // Pass questionsById map
         default:
           console.warn(`Unknown quiz mode: ${mode}`);
-          return []; // Return empty for unknown modes
+          return [];
       }
     },
-    enabled: (mode === 'weekly' && !!week) || (mode === 'custom' && !!id) || ['full', 'bookmark', 'smart'].includes(mode), // Enable based on mode requirements
-    staleTime: 1000 * 60, // Cache for 1 minute
-    retry: 1, // Retry once on error
+    // Enable this query only when base data is loaded and mode requirements are met
+    enabled: !isLoadingBaseQuestions && !isErrorBaseQuestions && !!questionData && (
+               (mode === 'weekly' && !!week) ||
+               (mode === 'custom' && !!id) ||
+               ['full', 'bookmark', 'smart'].includes(mode)
+             ),
+    staleTime: 1000 * 60 * 5, // Can have a longer staleTime as it depends on base data
+    retry: false, // No need to retry filtering logic
   });
 
   // Effect to process fetched questions (e.g., shuffling for hard mode)
   useEffect(() => {
-    if (isLoading || isError) {
-      setQuestions([]); // Clear local questions if loading or error
+    // Consider both loading states now
+    if (isLoadingBaseQuestions || isLoadingFiltered || isErrorBaseQuestions || isErrorFiltered) {
+      setQuestions([]);
       return;
     }
     
@@ -94,7 +118,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
     setShowResults(false);
     setReviewMode(false);
 
-  }, [fetchedQuestions, isLoading, isError]); // Depend on fetched data and loading/error state
+  }, [fetchedQuestions, isLoadingBaseQuestions, isLoadingFiltered, isErrorBaseQuestions, isErrorFiltered]); // Update dependencies
   
   // Effect to prepare the question for display (shuffle options if hard mode is on)
   useEffect(() => {
@@ -227,7 +251,7 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
   };
   
   return {
-    loading: isLoading, // Use isLoading from useQuery
+    loading: isLoadingBaseQuestions || isLoadingFiltered, // Combine loading states
     questions,
     currentQuestionIndex,
     answers,
