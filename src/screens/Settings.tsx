@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { DownloadCloud, UploadCloud, RotateCcw, Info } from "lucide-react";
+import { DownloadCloud, UploadCloud, RotateCcw, Info, Mail } from "lucide-react"; // Added Mail icon
 import { AboutModal } from "@/components/AboutModal";
 
 export const Settings = (): JSX.Element => {
@@ -110,6 +110,29 @@ export const Settings = (): JSX.Element => {
     document.documentElement.classList.remove('dark');
     
     toast("All data has been reset");
+  };
+
+  const handleReportBug = (): void => {
+    const recipient = "jyunth28@gmail.com";
+    const subject = "Bug Report - Quizzine Mobile App";
+    const body = `Please describe the bug in detail:
+
+Steps to reproduce:
+
+
+Expected behavior:
+
+
+Actual behavior:
+
+
+Device/OS (Optional):
+
+
+App Version (If known):`;
+
+    const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
   };
   
   return (
@@ -204,6 +227,24 @@ export const Settings = (): JSX.Element => {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+              </div>
+            </div>
+  
+            <div>
+              <h2 className="text-lg font-medium mb-2">Support</h2>
+              <div className="bg-card rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">Report a Bug</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Found an issue? Let us know via email.
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleReportBug}>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Report Bug
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
