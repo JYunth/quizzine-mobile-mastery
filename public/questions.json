@@ -1408,6 +1408,106 @@
       "description": "A course on how Green Economics can address environmental crises by going beyond technology to tackle the economic roots of issues like pollution, climate change, and habitat loss.",
       "questions": [
         {
+          "id": "conseco101-w0q1",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "\"the ability to produce a good at a lower opportunity cost than another producer\" is a definition of",
+          "options": ["real advantage", "monetary advantage", "comparative advantage", "opportunity advantage"],
+          "correctIndex": 2,
+          "tags": []
+        },
+        {
+          "id": "conseco101-w0q2",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "\"fluctuations in economic activity, such as employment and production\" are referred to as",
+          "options": ["business cycles", "economic cycles", "production cycles", "market cycles"],
+          "correctIndex": 0,
+          "tags": []
+        },
+        {
+          "id": "conseco101-w0q3",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "The property of society getting the most it can from its scarce resources is a definition of",
+          "options": ["efficiency", "equality", "prudence", "sustainability"],
+          "correctIndex": 0,
+          "tags": []
+        },
+        {
+          "id": "conseco101-w0q4",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "In the word root for Economics, nemein stands for",
+          "options": ["together", "to keep", "house", "manage"],
+          "correctIndex": 3,
+          "tags": []
+        },
+        {
+          "id": "conseco101-w0q5",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "Whatever must be given up to obtain some item is a definition of",
+          "options": ["explicit costs", "implicit costs", "opportunity costs", "phantom costs"],
+          "correctIndex": 2,
+          "tags": []
+        },
+        {
+          "id": "conseco101-w0q6",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "Rational decision making compares",
+          "options": ["average benefits to average costs", "average benefits to marginal costs", "marginal benefits to average costs", "marginal benefits to marginal costs"],
+          "correctIndex": 3,
+          "tags": []
+        },
+        {
+          "id": "conseco101-w0q7",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "\"something that induces a person to act\" is a definition of",
+          "options": ["enticement", "attraction", "incentive", "occupation"],
+          "correctIndex": 2,
+          "tags": []
+        },
+        {
+          "id": "conseco101-w0q8",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "Input costs that require an outlay of money are",
+          "options": ["explicit costs", "implicit costs", "opportunity costs", "phantom costs"],
+          "correctIndex": 0,
+          "tags": []
+        },
+        {
+          "id": "conseco101-w0q9",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "The property of distributing economic prosperity uniformly among the members of society is a definition of",
+          "options": ["efficiency", "equality", "prudence", "sustainability"],
+          "correctIndex": 1,
+          "tags": []
+        },
+        {
+          "id": "conseco101-w0q10",
+          "courseId": "conseco101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "\"the ability of an individual to own and exercise control over scarce resources\" is known as",
+          "options": ["property rights", "resource rights", "individual rights", "social rights"],
+          "correctIndex": 0,
+          "tags": []
+        },
+        {
           "id": "conseco101-w1q1",
           "courseId": "conseco101",
           "week": 1,
