@@ -111,11 +111,24 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
     }
     
     const { settings } = getStorage();
+    let processedQuestions = fetchedQuestions;
+
     if (settings.hardMode) {
-      setQuestions(shuffleArray(fetchedQuestions));
-    } else {
-      setQuestions(fetchedQuestions);
+      // Shuffle question order *and* shuffle options within each question ONCE
+      processedQuestions = shuffleArray(fetchedQuestions).map(q => {
+        const originalCorrectOption = q.options[q.correctIndex];
+        const shuffledOptions = shuffleArray([...q.options]);
+        const newCorrectIndex = shuffledOptions.indexOf(originalCorrectOption);
+        return {
+          ...q,
+          options: shuffledOptions,
+          correctIndex: newCorrectIndex, // Store the shuffled state
+        };
+      });
     }
+    // If not hard mode, options remain unshuffled
+
+    setQuestions(processedQuestions); // Set the final list (shuffled order and/or shuffled options)
     // Reset quiz state when questions change (e.g., mode switch)
     setCurrentQuestionIndex(0);
     setAnswers([]);
@@ -124,26 +137,12 @@ export function useQuizState({ mode, week, id }: UseQuizStateProps): {
 
   }, [fetchedQuestions, isLoadingBaseQuestions, isLoadingFiltered, isErrorBaseQuestions, isErrorFiltered]); // Update dependencies
   
-  // Effect to prepare the question for display (shuffle options if hard mode is on)
+  // Effect to set the question for display using the pre-processed (potentially shuffled) state
   useEffect(() => {
     if (questions.length > 0 && currentQuestionIndex < questions.length) {
+      // Directly use the question from the state, which already has shuffled options if hardMode was enabled
       const currentQuestion = questions[currentQuestionIndex];
-      const { settings } = getStorage(); // Get current settings
-
-      if (settings.hardMode) {
-        const originalCorrectOption = currentQuestion.options[currentQuestion.correctIndex];
-        // Shuffle a copy of the options array
-        const shuffledOptions = shuffleArray([...currentQuestion.options]); 
-        const newCorrectIndex = shuffledOptions.indexOf(originalCorrectOption);
-        
-        setDisplayQuestion({
-          ...currentQuestion,
-          options: shuffledOptions,
-          correctIndex: newCorrectIndex, // Use the new correct index for display and checking
-        });
-      } else {
-        setDisplayQuestion(currentQuestion); // Use original question if not hard mode
-      }
+      setDisplayQuestion(currentQuestion);
     } else {
       setDisplayQuestion(null); // Clear if no questions or index out of bounds
     }
