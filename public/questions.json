@@ -6,6 +6,106 @@
       "description": "A course on the types, values, and legal aspects of forests and their management practices.",
       "questions": [
         {
+          "id": "forests101-w0q1",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "Montane sub-tropical forests do not include",
+          "options": ["broadleaved forests", "pine forests", "semi-evergreen forests", "dry evergreen forests"],
+          "correctIndex": 2,
+          "tags": []
+        },
+        {
+          "id": "forests101-w0q2",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "Which of these is not a non-use value?",
+          "options": ["direct value", "existence value", "altruistic value", "bequest value"],
+          "correctIndex": 0,
+          "tags": []
+        },
+        {
+          "id": "forests101-w0q3",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "The art and science of cultivating forest crops is called",
+          "options": ["foresticulture", "monoculture", "silviculture", "silvics"],
+          "correctIndex": 2,
+          "tags": []
+        },
+        {
+          "id": "forests101-w0q4",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "Which of these is abiotic factor?",
+          "options": ["vines", "trees", "reptiles", "water"],
+          "correctIndex": 3,
+          "tags": []
+        },
+        {
+          "id": "forests101-w0q5",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "The term laterite soil is derived from Latin later which means",
+          "options": ["red", "brick", "fertile", "infertile"],
+          "correctIndex": 1,
+          "tags": []
+        },
+        {
+          "id": "forests101-w0q6",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "Self ploughing character is seen in",
+          "options": ["black cotton soil", "alluvial soil", "saline soil", "red and yellow soil"],
+          "correctIndex": 0,
+          "tags": []
+        },
+        {
+          "id": "forests101-w0q7",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "Vertical arrangement of soil horizons is called",
+          "options": ["soil texture", "soil structure", "soil prole", "soil science"],
+          "correctIndex": 2,
+          "tags": []
+        },
+        {
+          "id": "forests101-w0q8",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "Which of these has the highest organic matter content?",
+          "options": ["peaty soil", "alluvial soil", "saline soil", "red and yellow soil"],
+          "correctIndex": 0,
+          "tags": []
+        },
+        {
+          "id": "forests101-w0q9",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "In a triangle, the angle between base and hypotenuse, θ = 60° and the hypotenuse c = 4 cm. Find the length of the base b.",
+          "options": ["0.66", "1", "1.5", "2"],
+          "correctIndex": 3,
+          "tags": []
+        },
+        {
+          "id": "forests101-w0q10",
+          "courseId": "forests101",
+          "week": 0,
+          "weekTitle": "Pre-Course Bridge Quiz",
+          "question": "The breast height for Japan and Korea is",
+          "options": ["1.1 m", "1.2 m", "1.3 m", "1.4 m"],
+          "correctIndex": 1,
+          "tags": []
+        },
+        {
           "id": "forests101-w1q1",
           "courseId": "forests101",
           "week": 1,
