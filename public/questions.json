@@ -1524,7 +1524,7 @@
           "weekTitle": "Threats to wildlife",
           "question": "I tried growing vegetables under my teak plantation, but the vegetable plants died out. I should be concerned about",
           "options": ["autophagy", "allelophagy", "autopathy", "allelopathy"],
-          "correctIndex": 0,
+          "correctIndex": 3,
           "tags": []
         },
         {
