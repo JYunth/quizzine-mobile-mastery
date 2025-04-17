@@ -409,8 +409,14 @@ export const getQuestionsForCustomQuiz = (quizId: string, questionsById: Map<str
   const loadedQuestions: Question[] = [];
   quiz.questionIds.forEach(qId => {
     const question = questionsById.get(qId);
+    const currentCourseId = getCurrentCourseId(); // Get current course context
     if (question) {
-      loadedQuestions.push(question);
+      // **Robustness Check:** Ensure the loaded question belongs to the current course context
+      if (question.courseId === currentCourseId) {
+        loadedQuestions.push(question);
+      } else {
+        console.warn(`Question ID ${qId} from custom quiz ${quizId} belongs to course ${question.courseId}, but current course is ${currentCourseId}. Skipping.`);
+      }
     } else {
       console.warn(`Question ID ${qId} from custom quiz ${quizId} not found in provided map.`);
     }
